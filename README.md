@@ -11,7 +11,7 @@ Installation
 Add the following to composer.json to install via composer:
 ```composer
 "require": {
-    "smacp/machine-translator": "dev-develop"
+    "smacp/machine-translator": "dev-master"
 },
 "repositories": [
     {
