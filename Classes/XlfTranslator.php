@@ -366,7 +366,7 @@ class XlfTranslator
                                     $strTranslated++;
                                     
                                     if ($this->output) {
-                                        echo $translated . PHP_EOL;
+                                        echo '.';
                                     }
                                 } else {
                                     $this->mtFailCount++;
