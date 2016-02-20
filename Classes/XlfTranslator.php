@@ -418,6 +418,8 @@ class XlfTranslator
                     $contents = file_get_contents($filePath);
                     $xlfData = new SimpleXMLExtended($contents);
                     $new = [];
+                    
+                    $this->mtFailCount = 0;
 
                     foreach ($xlfData->file->body as $bItem) {
                         $xlfStrTranslated = 0;
@@ -561,6 +563,10 @@ class XlfTranslator
      */
     protected function shouldParseLocale($locale)
     {
+        if (!$this->translator->normaliseLanguageCode($locale)) {
+            return false;
+        }
+        
         if ($this->locales && !isset($this->locales[$locale])) {
             return false;
         }
