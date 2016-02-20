@@ -12,7 +12,7 @@ Composer
 "require": {
     "smacp/machine-translator": "dev-develop"
 },
-"repositories" : [
+"repositories": [
     {
         "type": "vcs",
         "url": "https://github.com/smacp/machine-translator.git"
