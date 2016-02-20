@@ -6,8 +6,9 @@ PHP
 ----
 v5.4.0+
 
-Composer
+Installation
 ----
+Add the following to composer.json to install via composer:
 ```composer
 "require": {
     "smacp/machine-translator": "dev-develop"
@@ -19,6 +20,7 @@ Composer
     }
 ]
 ```
+A client key and secret is required to use Microsoft's Translation service api. Free or paid accounts can be created at [Microsoft Azure](https://azure.microsoft.com).
 
 MicrosoftTranslator
 ----
