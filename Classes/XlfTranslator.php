@@ -53,6 +53,9 @@ class XlfTranslator
     /** @var boolean */
     protected $output = true;
     
+    /** @var boolean */
+    protected $outputTranslated = false;
+    
     /**
      * Get translator
      *
@@ -261,6 +264,29 @@ class XlfTranslator
     }
     
     /**
+     * Set outputTranslated
+     *
+     * @param boolean $outputTranslated
+     * @return XlfTranslator
+     */
+    public function setOutputTranslated($outputTranslated)
+    {
+        $this->outputTranslated = $outputTranslated;
+        
+        return $this;
+    }
+    
+    /**
+     * Get outputTanslated
+     *
+     * @return boolean
+     */
+    public function getOutputTranslated()
+    {
+        return $this->outputTranslated;
+    }
+    
+    /**
      * Set memory
      *
      * @param boolean $memory
@@ -346,6 +372,7 @@ class XlfTranslator
                         echo 'Parsing: ' . $filename . '...' . PHP_EOL;
                         echo 'Catalogue: ' . $catalogue . PHP_EOL;
                         echo 'Locale: ' . $locale . PHP_EOL;
+                        echo 'MT locale: ' . $this->translator->normaliseLanguageCode($locale) . PHP_EOL;
                         echo PHP_EOL;
                         echo 'P: ';
                     }
@@ -424,11 +451,10 @@ class XlfTranslator
                     }
 
                     if (count($new) > 0) {
-                        if ($this->output) {
+                        if ($this->output && $this->outputTranslated) {
                             foreach ($new as $key => $row) {
                                 echo '[#' . ($key+1) . '] Source: ' . $row['source'] . PHP_EOL;
-                                echo '[#' . ($key+1) . '] Translated: ' . $row['target'];
-                                echo PHP_EOL;
+                                echo '[#' . ($key+1) . '] Translated: ' . $row['target'] . PHP_EOL;
                             }
                         }
 
