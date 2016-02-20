@@ -7,60 +7,60 @@
     </header>
     <body>
       <trans-unit id="da39a3ee5e6b4b0d3255bfef95601890afd80709" resname="">
-        <source/>
-        <target/>
+        <source></source>
+        <target></target>
       </trans-unit>
-      <trans-unit id="3fef4887200df8d43e9190633e361f6d8cfad1e7" resname="%s - password reset" machinetranslated="1" datemachinetranslated="2016-02-20 11:28:00">
+      <trans-unit id="3fef4887200df8d43e9190633e361f6d8cfad1e7" resname="%s - password reset">
         <source>%s - password reset</source>
-        <target>%s - restablecimiento de contraseña</target>
+        <target>%s - password reset</target>
       </trans-unit>
-      <trans-unit id="f030c3d667652646b86732ad7bc67e226c49cd3a" resname="1 hour" machinetranslated="1" datemachinetranslated="2016-02-20 11:28:00">
+      <trans-unit id="f030c3d667652646b86732ad7bc67e226c49cd3a" resname="1 hour">
         <source>1 hour</source>
-        <target>1 hora</target>
+        <target>1 hour</target>
       </trans-unit>
-      <trans-unit id="f6ca823e12da8954ea22a283c5986a56c009d70a" resname="A paid session is required." machinetranslated="1" datemachinetranslated="2016-02-20 11:28:00">
+      <trans-unit id="f6ca823e12da8954ea22a283c5986a56c009d70a" resname="A paid session is required.">
         <source>A paid session is required.</source>
-        <target>Se requiere una sesión de pagada.</target>
+        <target>A paid session is required.</target>
       </trans-unit>
       <trans-unit id="b62bbdc9f0eae2b1fe0f0d9aee9914558cc8dc1c" resname="Welcome %name%, good to see you again.">
         <source>Welcome back %name%, good to see you again.</source>
         <target>Welcome %name%, good to see you again.</target>
       </trans-unit>
-      <trans-unit id="90107c97957c602795599a8715f32644e2156b60" resname="Already paid for WiFi?" machinetranslated="1" datemachinetranslated="2016-02-20 11:28:01">
+      <trans-unit id="90107c97957c602795599a8715f32644e2156b60" resname="Already paid for WiFi?">
         <source>Already paid?</source>
-        <target>¿Ya pagado?</target>
+        <target>Already paid?</target>
       </trans-unit>
-      <trans-unit id="b35d2dcd560450d75ceb59cdd751c7b8e019d441" resname="Already registered?" machinetranslated="1" datemachinetranslated="2016-02-20 11:28:01">
+      <trans-unit id="b35d2dcd560450d75ceb59cdd751c7b8e019d441" resname="Already registered?">
         <source>Already registered?</source>
-        <target>¿Ya registrado?</target>
+        <target>Already registered?</target>
       </trans-unit>
-      <trans-unit id="d5af5674822b3958a82f4390541a6c0d4e4d7015" resname="Your password must be at least %num_chars% characters long" machinetranslated="1" datemachinetranslated="2016-02-20 11:28:02">
+      <trans-unit id="d5af5674822b3958a82f4390541a6c0d4e4d7015" resname="Your password must be at least %num_chars% characters long">
         <source>Your password must be at least %num_chars% characters long.</source>
-        <target>Tu contraseña debe tener al menos caracteres %num_chars%.</target>
+        <target>Your password must be at least %num_chars% characters long.</target>
       </trans-unit>
-      <trans-unit id="4b675616a259c1b3331f04381a8a0e004e8077b7" resname="Back to login" machinetranslated="1" datemachinetranslated="2016-02-20 11:28:02">
+      <trans-unit id="4b675616a259c1b3331f04381a8a0e004e8077b7" resname="Back to login">
         <source>Back to login</source>
-        <target>Volver a iniciar sesión</target>
+        <target>Back to login</target>
       </trans-unit>
-      <trans-unit id="70cd0b36aaa454ab6963200c88f30d3dc50e56ef" resname="Click here to choose your new password" machinetranslated="1" datemachinetranslated="2016-02-20 11:28:02">
+      <trans-unit id="70cd0b36aaa454ab6963200c88f30d3dc50e56ef" resname="Click here to choose your new password">
         <source>Click here to choose your new password</source>
-        <target>Haga clic aquí para elegir tu nueva contraseña</target>
+        <target>Click here to choose your new password</target>
       </trans-unit>
-      <trans-unit id="19ac184f195eb12c51343d77eff5d0ec53d62df2" resname="Complete the details below" machinetranslated="1" datemachinetranslated="2016-02-20 11:28:03">
+      <trans-unit id="19ac184f195eb12c51343d77eff5d0ec53d62df2" resname="Complete the details below">
         <source>Complete the details below</source>
-        <target>Completar los datos a continuación</target>
+        <target>Complete the details below</target>
       </trans-unit>
-      <trans-unit id="f8b7f95300ade36b720eaac90e0af6e401dc369c" resname="Continue!" machinetranslated="1" datemachinetranslated="2016-02-20 11:28:03">
+      <trans-unit id="f8b7f95300ade36b720eaac90e0af6e401dc369c" resname="Continue!">
         <source>Back</source>
-        <target>Atrás</target>
+        <target>Back</target>
       </trans-unit>
-      <trans-unit id="d523ebbd10146cdfd39dee077f04c9d08468d0bc" resname="Country" machinetranslated="1" datemachinetranslated="2016-02-20 11:28:04">
+      <trans-unit id="d523ebbd10146cdfd39dee077f04c9d08468d0bc" resname="Country">
         <source>Country</source>
-        <target>País</target>
+        <target>Country</target>
       </trans-unit>
-      <trans-unit id="2eb6c4c537294780cab482adb19a0ffa48ebe345" resname="Why not relax in the tranquil surroundings of our medieval garden and enjoy a glass of mead." machinetranslated="1" datemachinetranslated="2016-02-20 11:28:04">
+      <trans-unit id="2eb6c4c537294780cab482adb19a0ffa48ebe345" resname="Why not relax in the tranquil surroundings of our medieval garden and enjoy a glass of mead.">
         <source>Why not relax in the tranquil surroundings of our medieval garden and enjoy a glass of mead.</source>
-        <target>Por qué no relajarse en el tranquilo entorno de nuestro jardín medieval y disfrutar de una copa de hidromiel.</target>
+        <target>Why not relax in the tranquil surroundings of our medieval garden and enjoy a glass of mead.</target>
       </trans-unit>
     </body>
   </file>

@@ -17,4 +17,11 @@ interface MachineTranslator
      * @param string $to
      */
     public function translate($word, $from, $to);
+    
+    /**
+     * Gets api provider name
+     *
+     * @return string
+     */
+    public function getProvider();
 }

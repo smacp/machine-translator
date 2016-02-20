@@ -35,7 +35,7 @@ class XlfTranslatorTest extends \PHPUnit_Framework_TestCase
                       ->setSourceLocale('en_GB')
                       ->setDir(dirname(__FILE__) . '/../xlf/')
                       ->setMemory(false)
-                      ->setCommit(true)
+                      ->setCommit(false)
                       ->setOutput(true);
         
         $parsed = $xlfTranslator->translate();

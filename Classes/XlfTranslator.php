@@ -29,6 +29,9 @@ class XlfTranslator
     /** @var string */
     protected $sourceLocale = 'en_GB';
     
+    /** @var array */
+    protected $catalogues = [];
+    
     /** @var boolean */
     protected $newOnly = false;
     
@@ -137,7 +140,7 @@ class XlfTranslator
      *
      * @return string
      */
-    public function getSourceLocale($locale)
+    public function getSourceLocale()
     {
         return $this->sourceLocale;
     }
@@ -151,6 +154,29 @@ class XlfTranslator
     public function setSourceLocale($locale)
     {
         $this->sourceLocale = $locale;
+        
+        return $this;
+    }
+    
+    /**
+     * Get catalogues
+     *
+     * @return string
+     */
+    public function getCatalogues()
+    {
+        return $this->catalogues;
+    }
+    
+    /**
+     * Set catalogues
+     *
+     * @param array $catalogues
+     * @return XlfTranslator
+     */
+    public function setCatalogues(array $catalogues)
+    {
+        $this->catalogues = $catalogues;
         
         return $this;
     }
@@ -257,6 +283,10 @@ class XlfTranslator
         $this->parsed = [];
         $this->mtFailCount = 0;
         
+        $provider = $this->translator->getProvider();
+        $catalogues = $this->getCatalogues();
+        $cataloguesTranslated = [];
+        $cataloguesSkipped = [];
         $localesTranslated = [];
         $localesSkipped = [];
         $strRequested = 0;
@@ -265,15 +295,18 @@ class XlfTranslator
         
         if ($this->output) {
             echo PHP_EOL;
-            echo '-----------------------------------------' . PHP_EOL;
+            echo '-----------------------------------------';
             echo 'XlfTranslator' . PHP_EOL;
             echo '-----------------------------------------' . PHP_EOL;
+            echo 'MT provider: ' . $provider . PHP_EOL;
+            echo PHP_EOL;
         }
         
         if ($dh = opendir($this->dir)) {
             
             if ($this->output) {
-                echo 'Translating xlf in: ' . $this->dir . PHP_EOL . PHP_EOL;
+                echo 'Translating xlf in: ' . $this->dir . PHP_EOL;
+                echo PHP_EOL;
             }
             
             while (false !== ($filename = readdir($dh))) {
@@ -294,6 +327,13 @@ class XlfTranslator
                     
                     $i = 0;
                     
+                    if (!$this->shouldParseCatalogue($catalogue)) {
+                        if (!in_array($catalogue, $cataloguesSkipped)) {
+                            $cataloguesSkipped[] = $catalogue;
+                        }
+                        continue;
+                    }
+                    
                     if (!$this->shouldParseLocale($locale)) {
                         if (!in_array($locale, $localesSkipped)) {
                             $localesSkipped[] = $locale;
@@ -302,10 +342,12 @@ class XlfTranslator
                     }
                     
                     if ($this->output) {
+                        echo PHP_EOL;
                         echo 'Parsing: ' . $filename . '...' . PHP_EOL;
                         echo 'Catalogue: ' . $catalogue . PHP_EOL;
                         echo 'Locale: ' . $locale . PHP_EOL;
                         echo PHP_EOL;
+                        echo 'P: ';
                     }
 
                     $contents = file_get_contents($file_path);
@@ -375,7 +417,8 @@ class XlfTranslator
                         }
                         
                         if ($this->output) {
-                            echo $xlfStrTranslated . ' string(s) translated.' . PHP_EOL;
+                            echo PHP_EOL;
+                            echo 'T: ' . $xlfStrTranslated . PHP_EOL;
                             echo PHP_EOL;
                         }
                     }
@@ -384,13 +427,18 @@ class XlfTranslator
                         if ($this->output) {
                             foreach ($new as $key => $row) {
                                 echo '[#' . ($key+1) . '] Source: ' . $row['source'] . PHP_EOL;
-                                echo '[#' . ($key+1) . '] Translated: ' . $row['target'] . PHP_EOL . PHP_EOL;
+                                echo '[#' . ($key+1) . '] Translated: ' . $row['target'];
+                                echo PHP_EOL;
                             }
                         }
 
                         if ($this->commit === true) {
                             $this->write($xlf_data, $file_path);
                             $filesWritten++;
+                        }
+                        
+                        if (!in_array($catalogue, $cataloguesTranslated)) {
+                            $cataloguesTranslated[] = $catalogue;
                         }
                         
                         $localesTranslated[] = $locale;
@@ -410,7 +458,12 @@ class XlfTranslator
             echo 'Total locales translated: ' . count($localesTranslated) . PHP_EOL;
             echo 'Total strings requested: ' . $strRequested . PHP_EOL;
             echo 'Total strings translated: ' . $strTranslated . PHP_EOL;
-
+            echo 'Catalogues translated: ' . (count($cataloguesTranslated) === 0 ? '0' : implode(', ', $cataloguesTranslated)) . PHP_EOL;
+            
+            if ($cataloguesSkipped) {
+                echo 'Catalogues skipped: ' . implode(', ', $cataloguesSkipped) . PHP_EOL;
+            }
+            
             if ($localesSkipped) {
                 echo 'Locales skipped: ' .implode(', ', $localesSkipped) . PHP_EOL;
             }
@@ -419,6 +472,21 @@ class XlfTranslator
         }
 
         return $this;
+    }
+    
+    /**
+     * Determines whether catalogue should be parsed
+     *
+     * @param string $catalogue
+     * @return boolean
+     */
+    protected function shouldParseCatalogue($catalogue)
+    {
+        if (count($this->catalogues) > 0 && !in_array($catalogue, $this->catalogues)) {
+            return false;
+        }
+        
+        return true;
     }
     
     /**

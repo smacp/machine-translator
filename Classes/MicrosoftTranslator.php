@@ -11,6 +11,9 @@ require_once 'MachineTranslator.php';
 
 class MicrosoftTranslator implements MachineTranslator
 {
+    /** @const string */
+    const PROVIDER = 'Microsoft';
+    
     /** @var string $clientId **/
     protected $clientID;
 
@@ -98,6 +101,16 @@ class MicrosoftTranslator implements MachineTranslator
         $this->clientID = $cid;
         $this->clientSecret = $secret;
         $this->decodeHtmlEntities = $decodeHtmlEntities;
+    }
+    
+    /**
+     * Get provider
+     *
+     * @return string
+     */
+    public function getProvider()
+    {
+        return self::PROVIDER;
     }
     
     /**
