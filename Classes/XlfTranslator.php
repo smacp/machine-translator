@@ -406,7 +406,6 @@ class XlfTranslator
                     }
                     
                     if ($this->output) {
-                        echo PHP_EOL;
                         echo 'File: ' . $filename . PHP_EOL;
                         echo 'Catalogue: ' . $catalogue . PHP_EOL;
                         echo 'Locale: ' . $locale . PHP_EOL;
@@ -496,6 +495,7 @@ class XlfTranslator
                                 echo '[#' . ($key+1) . '] Source: ' . $row['source'] . PHP_EOL;
                                 echo '[#' . ($key+1) . '] Translated: ' . $row['target'] . PHP_EOL;
                             }
+                            echo PHP_EOL;
                         }
 
                         if ($this->commit === true) {
