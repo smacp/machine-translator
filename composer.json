@@ -2,7 +2,7 @@
     "name": "smacp/machine-translation",
     "description": "Machine translator",
     "keywords": ["machine", "translation"],
-    "homepage": "https://github.com/smacp",
+    "homepage": "https://github.com/smacp/machine-translator",
     "license": "MIT",
     "authors": [
         {
@@ -16,7 +16,7 @@
         "composer/composer": "1.0.*@dev"
     },
     "autoload": {
-        "psr-4": { "SMACP\\MachineTranslation\\": "" }
+        "psr-4": { "SMACP\\MachineTranslator\\": "" }
     },
     "extra": {
         "branch-alias": {
