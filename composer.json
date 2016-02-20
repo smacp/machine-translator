@@ -1,0 +1,26 @@
+{
+    "name": "smacp/machine-translation",
+    "description": "Machine translator",
+    "keywords": ["machine", "translation"],
+    "homepage": "https://github.com/smacp",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Stuart MacPherson"
+        }
+    ],
+    "require": {
+        "php": ">=5.3.3"
+    },
+    "require-dev": {
+        "composer/composer": "1.0.*@dev"
+    },
+    "autoload": {
+        "psr-4": { "SMACP\\MachineTranslation\\": "" }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.0.x-dev"
+        }
+    }
+}
