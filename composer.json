@@ -1,6 +1,6 @@
 {
     "name": "smacp/machine-translator",
-    "description": "Machine translator",
+    "description": "PHP Machine translator",
     "keywords": ["machine", "translation", "xliff", "xlf"],
     "homepage": "https://github.com/smacp/machine-translator",
     "license": "MIT",
