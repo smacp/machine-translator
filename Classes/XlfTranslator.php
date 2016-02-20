@@ -1,5 +1,30 @@
 <?php
 
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2016 Stuart MacPherson
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ */
+   
 namespace SMACP\MachineTranslator\Classes;
 
 require_once('SimpleXmlExtended.php');
@@ -13,6 +38,9 @@ class XlfTranslator
 {
     /** @var MachineTranslator */
     protected $translator;
+    
+    /** @var string */
+    protected $dir;
     
     /** @var array */
     protected $parsed;
@@ -126,6 +154,16 @@ class XlfTranslator
     }
     
     /**
+     * Get dir
+     *
+     * @return string
+     */
+    public function getDir()
+    {
+        return $this->dir;
+    }
+    
+    /**
      * Set dir
      *
      * @param string $dir
@@ -231,13 +269,13 @@ class XlfTranslator
     }
     
     /**
-     * Get memory
+     * Get output
      *
      * @return boolean
      */
-    public function getMemory()
+    public function getOutput()
     {
-        return $this->memory;
+        return $this->output;
     }
     
     /**
@@ -254,13 +292,13 @@ class XlfTranslator
     }
     
     /**
-     * Get output
+     * Get outputTanslated
      *
      * @return boolean
      */
-    public function getOutput()
+    public function getOutputTranslated()
     {
-        return $this->output;
+        return $this->outputTranslated;
     }
     
     /**
@@ -277,13 +315,13 @@ class XlfTranslator
     }
     
     /**
-     * Get outputTanslated
+     * Get memory
      *
      * @return boolean
      */
-    public function getOutputTranslated()
+    public function getMemory()
     {
-        return $this->outputTranslated;
+        return $this->memory;
     }
     
     /**
@@ -336,15 +374,15 @@ class XlfTranslator
             }
             
             while (false !== ($filename = readdir($dh))) {
-                $file_path = $this->dir . $filename;
-                if (is_file($file_path)) {
+                $filePath = $this->dir . $filename;
+                if (is_file($filePath)) {
                     $parts = explode('.', $filename);
                     
                     if (count($parts) !== 3) {
                         throw new Exception('Cannot parse file. Expected file in format catalogue.locale.xlf.');
                     }
                     
-                    if (strpos($file_path, '.xlf') < 0) {
+                    if (strpos($filePath, '.xlf') < 0) {
                         throw new Exception('Not a valid xlf file: ' . $filename);
                     }
                     
@@ -369,7 +407,7 @@ class XlfTranslator
                     
                     if ($this->output) {
                         echo PHP_EOL;
-                        echo 'Parsing: ' . $filename . '...' . PHP_EOL;
+                        echo 'File: ' . $filename . PHP_EOL;
                         echo 'Catalogue: ' . $catalogue . PHP_EOL;
                         echo 'Locale: ' . $locale . PHP_EOL;
                         echo 'MT locale: ' . $this->translator->normaliseLanguageCode($locale) . PHP_EOL;
@@ -377,27 +415,27 @@ class XlfTranslator
                         echo 'P: ';
                     }
 
-                    $contents = file_get_contents($file_path);
-                    $xlf_data = new SimpleXMLExtended($contents);
+                    $contents = file_get_contents($filePath);
+                    $xlfData = new SimpleXMLExtended($contents);
                     $new = [];
 
-                    foreach ($xlf_data->file->body as $b_item) {
+                    foreach ($xlfData->file->body as $bItem) {
                         $xlfStrTranslated = 0;
-                        foreach ($b_item as $b_value) {
+                        foreach ($bItem as $bValue) {
                             if ($this->mtFailCount >= $this->maxMtFailCount) {
                                 // skip to the end as we may have hit the flood limit
                                 continue;
                             }
 
-                            $targetAttributes = $b_value->target->attributes();
+                            $targetAttributes = $bValue->target->attributes();
 
                             if ($this->newOnly === true && (!isset($targetAttributes['state']) || (string) $targetAttributes['state'] !== 'new')) {
                                 continue;
                             }
 
-                            $source = (string) $b_value->source;
-                            $target = (string) $b_value->target;
-                            $attributes = $b_value->attributes();
+                            $source = (string) $bValue->source;
+                            $target = (string) $bValue->target;
+                            $attributes = $bValue->attributes();
 
                             if ($source && $target) {
                                 if ($source !== $target) {
@@ -417,17 +455,17 @@ class XlfTranslator
                                     $new[$i]['target'] = $translated;
 
                                     if (!isset($attributes[$this->attributes['mt']])) {
-                                        $b_value->addAttribute($this->attributes['mt'], 1);
-                                        $b_value->addAttribute($this->attributes['mt_date'], date('Y-m-d H:i:s'));
+                                        $bValue->addAttribute($this->attributes['mt'], 1);
+                                        $bValue->addAttribute($this->attributes['mt_date'], date('Y-m-d H:i:s'));
                                     }
 
-                                    $b_value->attributes()->{$this->attributes['mt']} = 1;
+                                    $bValue->attributes()->{$this->attributes['mt']} = 1;
 
                                     if ($this->translator->containsHtml($translated)) {
-                                        $b_value->target = null;
-                                        $b_value->target->addCData($translated);
+                                        $bValue->target = null;
+                                        $bValue->target->addCData($translated);
                                     } else {
-                                        $b_value->target = $translated;
+                                        $bValue->target = $translated;
                                     }
                                     
                                     $i++;
@@ -459,7 +497,7 @@ class XlfTranslator
                         }
 
                         if ($this->commit === true) {
-                            $this->write($xlf_data, $file_path);
+                            $this->write($xlfData, $filePath);
                             $filesWritten++;
                         }
                         

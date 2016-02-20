@@ -1,5 +1,30 @@
 <?php
 
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2016 Stuart MacPherson
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ */
+
 namespace SMACP\MachineTranslator\Classes;
 
 /**
@@ -31,58 +56,58 @@ class MicrosoftTranslator implements MachineTranslator
     
     /** @var array */
     protected $locales = [
-        'ar' => 'Arabic',
-        'bs-Latn' => 'Bosnian (Latin)',
-        'bg' => 'Bulgarian',
-        'ca' => 'Catalan',
-        'zh-CHS' => 'Chinese Simplified',
-        'zh-CHT' => 'Chinese Traditional',
-        'hr' => 'Croatian',
-        'cs' => 'Czech',
-        'da' => 'Danish',
-        'nl' => 'Dutch',
-        'en' => 'English',
-        'et' => 'Estonian',
-        'fi' => 'Finnish',
-        'fr' => 'French',
-        'de' => 'German',
-        'el' => 'Greek',
-        'ht' => 'Haitian Creole',
-        'he' => 'Hebrew',
-        'hi' => 'Hindi',
-        'mww' => 'Hmong Daw',
-        'hu' => 'Hungarian',
-        'id' => 'Indonesian',
-        'it' => 'Italian',
-        'ja' => 'Japanese',
-        'sw' => 'Kiswahili',
-        'tlh' => 'Klingon',
+        'ar'       => 'Arabic',
+        'bs-Latn'  => 'Bosnian (Latin)',
+        'bg'       => 'Bulgarian',
+        'ca'       => 'Catalan',
+        'zh-CHS'   => 'Chinese Simplified',
+        'zh-CHT'   => 'Chinese Traditional',
+        'hr'       => 'Croatian',
+        'cs'       => 'Czech',
+        'da'       => 'Danish',
+        'nl'       => 'Dutch',
+        'en'       => 'English',
+        'et'       => 'Estonian',
+        'fi'       => 'Finnish',
+        'fr'       => 'French',
+        'de'       => 'German',
+        'el'       => 'Greek',
+        'ht'       => 'Haitian Creole',
+        'he'       => 'Hebrew',
+        'hi'       => 'Hindi',
+        'mww'      => 'Hmong Daw',
+        'hu'       => 'Hungarian',
+        'id'       => 'Indonesian',
+        'it'       => 'Italian',
+        'ja'       => 'Japanese',
+        'sw'       => 'Kiswahili',
+        'tlh'      => 'Klingon',
         'tlh-Qaak' => 'Klingon (pIqaD)',
-        'ko' => 'Korean',
-        'lv' => 'Latvian',
-        'lt' => 'Lithuanian',
-        'ms' => 'Malay',
-        'mt' => 'Maltese',
-        'no' => 'Norwegian',
-        'fa' => 'Persian',
-        'pl' => 'Polish',
-        'pt' => 'Portuguese',
-        'otq' => 'Querétaro Otomi',
-        'ro' => 'Romanian',
-        'ru' => 'Russian',
-        'sr-Cyrl' => 'Serbian (Cyrillic)',
-        'sr-Latn' => 'Serbian (Latin)',
-        'sk' => 'Slovak',
-        'sl' => 'Slovenian',
-        'es' => 'Spanish',
-        'sv' => 'Swedish',
-        'th' => 'Thai',
-        'tr' => 'Turkish',
-        'uk' => 'Ukrainian',
-        'ur' => 'Urdu',
-        'vi' => 'Vietnamese',
-        'cy' => 'Welsh',
-        'yua' => 'Yucatec Maya',
+        'ko'       => 'Korean',
+        'lv'       => 'Latvian',
+        'lt'       => 'Lithuanian',
+        'ms'       => 'Malay',
+        'mt'       => 'Maltese',
+        'no'       => 'Norwegian',
+        'fa'       => 'Persian',
+        'pl'       => 'Polish',
+        'pt'       => 'Portuguese',
+        'otq'      => 'Querétaro Otomi',
+        'ro'       => 'Romanian',
+        'ru'       => 'Russian',
+        'sr-Cyrl'  => 'Serbian (Cyrillic)',
+        'sr-Latn'  => 'Serbian (Latin)',
+        'sk'       => 'Slovak',
+        'sl'       => 'Slovenian',
+        'es'       => 'Spanish',
+        'sv'       => 'Swedish',
+        'th'       => 'Thai',
+        'tr'       => 'Turkish',
+        'uk'       => 'Ukrainian',
+        'ur'       => 'Urdu',
+        'vi'       => 'Vietnamese',
+        'cy'       => 'Welsh',
+        'yua'      => 'Yucatec Maya',
     ];
     
     /** @var array */
