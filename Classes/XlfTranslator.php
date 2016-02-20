@@ -422,6 +422,7 @@ class XlfTranslator
 
                     foreach ($xlfData->file->body as $bItem) {
                         $xlfStrTranslated = 0;
+                        
                         foreach ($bItem as $bValue) {
                             if ($this->mtFailCount >= $this->maxMtFailCount) {
                                 // skip to the end as we may have hit the flood limit
@@ -483,6 +484,9 @@ class XlfTranslator
                         }
                         
                         if ($this->output) {
+                            if ($xlfStrTranslated === 0) {
+                                echo 'No strings translated';
+                            }
                             echo PHP_EOL;
                             echo 'T: ' . $xlfStrTranslated . PHP_EOL;
                             echo PHP_EOL;
@@ -567,7 +571,7 @@ class XlfTranslator
             return false;
         }
         
-        if ($this->locales && !isset($this->locales[$locale])) {
+        if ($this->locales && !in_array($locale, $this->locales)) {
             return false;
         }
         
