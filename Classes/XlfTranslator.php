@@ -295,7 +295,7 @@ class XlfTranslator
         
         if ($this->output) {
             echo PHP_EOL;
-            echo '-----------------------------------------';
+            echo '-----------------------------------------' . PHP_EOL;
             echo 'XlfTranslator' . PHP_EOL;
             echo '-----------------------------------------' . PHP_EOL;
             echo 'MT provider: ' . $provider . PHP_EOL;
