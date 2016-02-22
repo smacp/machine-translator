@@ -32,7 +32,6 @@ namespace SMACP\MachineTranslator\Classes;
  *
  * @author Stuart MacPherson
  */
-require_once 'MachineTranslator.php';
 
 class MicrosoftTranslator implements MachineTranslator
 {

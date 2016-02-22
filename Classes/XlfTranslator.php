@@ -24,10 +24,10 @@
  * SOFTWARE.
  *
  */
-   
+
 namespace SMACP\MachineTranslator\Classes;
 
-require_once('SimpleXmlExtended.php');
+use SMACP\MachineTranslator\Classes\SimpleXmlExtended;
 
 /**
  * Translates xlf files

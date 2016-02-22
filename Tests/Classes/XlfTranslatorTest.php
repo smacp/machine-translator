@@ -6,10 +6,6 @@ use SMACP\MachineTranslator\Tests\testConfig;
 use SMACP\MachineTranslator\Classes\MicrosoftTranslator;
 use SMACP\MachineTranslator\Classes\XlfTranslator;
 
-require_once dirname(__FILE__).'../../testConfig.php';
-require_once dirname(__FILE__).'../../../Classes/MicrosoftTranslator.php';
-require_once dirname(__FILE__).'../../../Classes/XlfTranslator.php';
-
 class XlfTranslatorTest extends \PHPUnit_Framework_TestCase
 {
     /** @var array */

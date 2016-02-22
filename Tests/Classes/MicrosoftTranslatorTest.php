@@ -5,9 +5,6 @@ namespace SMACP\MachineTranslator\Tests\Classes;
 use SMACP\MachineTranslator\Tests\testConfig;
 use SMACP\MachineTranslator\Classes\MicrosoftTranslator;
 
-require_once dirname(__FILE__).'../../testConfig.php';
-require_once dirname(__FILE__).'../../../Classes/MicrosoftTranslator.php';
-
 class MicrosoftTranslatorTest extends \PHPUnit_Framework_TestCase
 {    
     /** @var array */
