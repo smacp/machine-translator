@@ -1,5 +1,4 @@
 # MachineTranslator
-# In development
 MachineTranslator is a PHP component that uses the Microsoft Translator service to translate strings from one language to another. It is also able to machine translate xliff (.xlf) files. It currently supports the Microsoft service but other api providers may be also be implemented in future (e.g. Google Translate).
 
 PHP
@@ -79,4 +78,4 @@ MIT
 
 Todo
 ----
-Finish development!
+Finish tests
