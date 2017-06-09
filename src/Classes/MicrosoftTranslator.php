@@ -27,6 +27,9 @@
 
 namespace SMACP\MachineTranslator\Classes;
 
+use GuzzleHttp\Client;
+use Exception;
+
 /**
  * Provides methods to translate words via Microsoft translation service
  *
@@ -35,6 +38,9 @@ namespace SMACP\MachineTranslator\Classes;
 
 class MicrosoftTranslator implements MachineTranslator
 {
+    /** @const string */
+    const HTTP_STATUS_CODE_OK = 200;
+
     /** @const string */
     const PROVIDER = 'Microsoft';
     
@@ -208,6 +214,8 @@ class MicrosoftTranslator implements MachineTranslator
     /**
      * Gets an access token for the Microsoft Translator service
      *
+     * @throws Exception
+     *
      * @return string
      */
     public function getAccessToken()
@@ -216,37 +224,23 @@ class MicrosoftTranslator implements MachineTranslator
             return $this->accessToken;
         }
 
-        // if access token is not expired and is stored in COOKIE then return it
-        if (php_sapi_name() !== 'cli') {
-            if (isset($_COOKIE['bing_access_token'])) {
-                return $_COOKIE['bing_access_token'];
-            }
+        $url = 'https://api.cognitive.microsoft.com/sts/v1.0/issueToken?Subscription-Key=' . urlencode($this->clientID);
+        // Get a JWT for the Microsoft Translator API.
+        $client = new Client();
+
+        $response = $client->post($url);
+
+        $statusCode = $response->getStatusCode();
+
+        if ($statusCode !== self::HTTP_STATUS_CODE_OK) {
+            throw new Exception('No access token could be obtained.');
         }
 
-        // Get a 10-minute access token for Microsoft Translator API.
-        $url = 'https://datamarket.accesscontrol.windows.net/v2/OAuth2-13';
-        $postParams = 'grant_type=client_credentials&client_id=' . urlencode($this->clientID) . '&client_secret='.urlencode($this->clientSecret).'&scope=http://api.microsofttranslator.com';
-
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $postParams);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        $this->response = curl_exec($ch);
-        $this->response = json_decode($this->response);
-
-        if (!isset($this->response->access_token) || !$this->response->access_token) {
-            throw new \Exception('No access token could be obtained.');
-        }
-
-        $this->accessToken = $this->response->access_token;
-        $expires = $this->response->expires_in;
-
-        if (php_sapi_name() !== 'cli') {
-            setcookie('bing_access_token', $this->accessToken, $expires);
-        }
+        $this->accessToken = $response->getBody()->getContents();
 
         return $this->accessToken;
     }
+
 
     /**
      * Translates a string
