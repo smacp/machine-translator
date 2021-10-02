@@ -23,12 +23,12 @@ A client key and secret is required to use Microsoft's Translation service api. 
 
 MicrosoftTranslator
 ----
-The MicrosoftTranslator requires a client key and client secret to access Microsoft's service. Example use for translating a string from English to Spanish:
+The MicrosoftTranslator requires a Microsoft Cognitive Services subscription key to access Microsoft's service. Example use for translating a string from English to Spanish:
 
 ```php
-use SMACP\MachineTranslator\Classes\MicrosoftTranslator;
+use smacp\MachineTranslator\Classes\MicrosoftTranslator;
 
-$translator = new MicrosoftTranslator($myMsTranslationClientId, $myMsTranslationClientSecret);
+$translator = new MicrosoftTranslator($myMsTranslationSubscriptionKey);
 $translated = $translator->translate('Hello %name%', 'en', 'es');
 ```
 
@@ -45,7 +45,7 @@ The XlfTranslator machine translates xliff files found in a given directory. It 
 use SMACP\MachineTranslator\Classes\MicrosoftTranslator;
 use SMACP\MachineTranslator\Classes\XlfTranslator;
 
-$translator = new MicrosoftTranslator($myMsTranslationClientId, $myMsTranslationClientSecret);
+$translator = new MicrosoftTranslator($myMsTranslationSubscriptionKey);
 // map my xlf file language codes to Microsoft's :)
 $translator->setLocaleMap([
     'ar_SY' => 'ar',
@@ -60,12 +60,9 @@ $translator->setLocaleMap([
     'zh_TW' => 'zh-CHT',
 ]);
 
-$xlfTranslator = new XlfTranslator();
-$xlfTranslator->setTranslator($translator)
-              ->setSourceLocale('en_GB')
-              ->setDir('/home/me/xlf/')
-              ->setOutput(true)
-              ->translate();
+$xlfTranslator = new XlfTranslator($translator, '/home/me/xlf/');
+$xlfTranslator->setOutput(true)
+    ->translate();
 ```
 Known issues
 ----

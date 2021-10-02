@@ -14,7 +14,7 @@
  *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -25,7 +25,7 @@
  *
  */
 
-namespace SMACP\MachineTranslator\Classes;
+namespace smacp\MachineTranslator\Classes;
 
 use GuzzleHttp\Client;
 use Exception;
@@ -38,29 +38,46 @@ use Exception;
 
 class MicrosoftTranslator implements MachineTranslator
 {
-    /** @const string */
-    const HTTP_STATUS_CODE_OK = 200;
+    /** @var string */
+    private const HTTP_STATUS_CODE_OK = 200;
 
-    /** @const string */
-    const PROVIDER = 'Microsoft';
-    
-    /** @var string $clientId **/
-    protected $clientID;
+    /** @var string */
+    public const PROVIDER = 'Microsoft';
 
-    /** @var string $clientSecret **/
-    protected $clientSecret;
+    /**
+     * The Microsoft client subscription key.
+     *
+     * @var string
+     */
+    private $clientKey;
 
-    /** @var string $response **/
-    protected $response;
+    /**
+     * The response from the Microsoft translation API.
+     *
+     * @var string
+     */
+    private $response;
 
-    /** @var string $accessToken **/
-    protected $accessToken;
+    /**
+     * The Microsoft JWT access token obtained for the Microsoft subscription key.
+     *
+     * @var string
+     */
+    private $accessToken;
 
-    /** @var boolean $decodeEntities */
-    protected $decodeHtmlEntities;
-    
-    /** @var array */
-    protected $locales = [
+    /**
+     * Whether to decode HTML entities in translated responses.
+     *
+     * @var bool
+     */
+    private $decodeHtmlEntities;
+
+    /**
+     * Array of Microsoft translator locales.
+     *
+     * @var string[]
+     */
+    private $locales = [
         'ar'       => 'Arabic',
         'bs-Latn'  => 'Bosnian (Latin)',
         'bg'       => 'Bulgarian',
@@ -114,101 +131,246 @@ class MicrosoftTranslator implements MachineTranslator
         'cy'       => 'Welsh',
         'yua'      => 'Yucatec Maya',
     ];
-    
-    /** @var array */
-    protected $localeMap = [];
-    
+
     /**
-     * Constructor
+     * Array of local locale code mappings to Microsoft Translator locales e.g.
      *
-     * @param string $cid
-     * @param string $secret
-     * @param boolean $decodeHtmlEntities
+     * [
+     *     'my_serbain_code' => 'sr-Cyrl',
+     * ]
+     *
+     * @var string[]
+     */
+    private $localeMap = [];
+
+    /**
+     * MicrosoftTranslator Constructor
+     *
+     * @param string $clientID
+     * @param bool $decodeHtmlEntities
+     *
 	 * @return MicrosoftTranslator
      */
-    public function __construct($cid, $secret, $decodeHtmlEntities = true)
+    public function __construct(string $clientID, bool $decodeHtmlEntities = true)
     {
-        $this->clientID = $cid;
-        $this->clientSecret = $secret;
+        $this->clientKey = $clientID;
         $this->decodeHtmlEntities = $decodeHtmlEntities;
     }
-    
+
     /**
      * Get provider
      *
      * @return string
      */
-    public function getProvider()
+    public function getProvider(): string
     {
         return self::PROVIDER;
     }
-    
+
     /**
      * Gets locales
      *
      * @return array
      */
-    public function getLocales()
+    public function getLocales(): array
     {
         return $this->locales;
     }
-    
+
     /**
      * Set localeMap
      *
      * @param array $localeMap
+     *
      * @return MicrosoftTranslator
      */
-    public function setLocaleMap(array $localeMap)
+    public function setLocaleMap(array $localeMap): MicrosoftTranslator
     {
         $this->localeMap = $localeMap;
-        
+
         return $this;
     }
 
 	/**
      * Get localeMap
      *
-     * @param array $localeMap
-     * @return MicrosoftTranslator
+     * @return array
      */
-    public function getLocaleMap()
+    public function getLocaleMap(): array
     {
         return $this->localeMap;
     }
-    
+
     /**
      * Attempts to normalise the given language code to a Microsoft translation code
      *
      * @param string $code
+     *
      * @return string
      */
-    public function normaliseLanguageCode($code)
+    public function normaliseLanguageCode($code): string
     {
         if (isset($this->locales[$code])) {
             return $code;
         }
-        
+
         $locales = array_keys($this->getLocales());
-        
+
         $localeMap = $this->localeMap;
 
         if (count($localeMap) > 0) {
             return isset($localeMap[$code]) ? $localeMap[$code] : '';
         }
-        
+
         $code = str_replace('_', '-', strtolower($code));
         $find = ['-cn', '-tw'];
         $replace = ['-chs', '-cht'];
         $code = str_replace($find, $replace, $code);
-        
+
         foreach ($locales as $mLocale) {
             if ($code === strtolower($mLocale)) {
                 return $mLocale;
             }
         }
-        
+
         return '';
+    }
+
+    /**
+     * Translates a string
+     *
+     * @param string $word The source string to translate
+     * @param string $from The locale code for the source string
+     * @param string $to The locale to translate into
+     *
+     * @return string
+     */
+    public function translate(string $word, string $from, string $to): string
+    {
+        if (!$word) {
+            return '';
+        }
+
+        $from = $this->normaliseLanguageCode($from);
+        $to = $this->normaliseLanguageCode($to);
+
+        if (!$from || !$to) {
+            return '';
+        }
+
+        if ($to === $from) {
+            return $word;
+        }
+
+        // extract and preserve placeholders
+        $extracted = $this->getPlaceholders($word);
+        $placeholders = [];
+
+        if (count($extracted) > 0) {
+            $placeholders = $this->createPlaceholdersMap($extracted);
+        }
+
+        if (count($placeholders) > 0) {
+            $word = str_replace(array_keys($placeholders), array_values($placeholders), $word);
+        }
+
+        $url = 'http://api.microsofttranslator.com/V2/Http.svc/Translate?text=' . urlencode($word) . '&from=' . $from . '&to=' . $to;
+        $accessToken = $this->getAccessToken();
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Authorization:bearer ' . $accessToken]);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        $this->response = curl_exec($ch);
+
+        preg_match_all('/<string (.*?)>(.*?)<\/string>/s', $this->response, $matches);
+
+        if (!isset($matches[2][0])) {
+            return '';
+        }
+
+        $translated = $matches[2][0];
+        $translated = count($placeholders) > 0 ? str_replace(array_values($placeholders), array_keys($placeholders), $translated) : $translated;
+
+        // fix any html entity conversion that may have been applied
+        if ($this->decodeHtmlEntities === true) {
+            $translated = $this->decodeEntities($translated);
+        }
+
+        return $translated;
+    }
+
+    /**
+     * Detects the language for the given string
+     *
+     * @param string $str
+     * @param bool $normaliseLocaleCode
+     *
+     * @return string
+     */
+    public function detectLanguage($str, $normaliseLocaleCode = false): string
+    {
+        $accessToken = $this->getAccessToken();
+
+        $url = 'http://api.microsofttranslator.com/V2/Http.svc/Detect?text=' . urlencode($str);
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Authorization:bearer ' . $accessToken]);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        $this->response = curl_exec($ch);
+
+        preg_match_all('/<string (.*?)>(.*?)<\/string>/s', $this->response, $matches);
+
+        $result = '';
+
+        if (isset($matches[2][0]) && $matches[2][0]) {
+            $result = $matches[2][0];
+            if ($normaliseLocaleCode && $this->localeMap) {
+                $map = array_flip($this->localeMap);
+                if (isset($map[$result])) {
+                    $result = $map[$result];
+                }
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Gets response
+     *
+     * @return string
+     */
+    public function getResponse()
+    {
+        return $this->response;
+    }
+
+    /**
+     * Sets decodeHtmlEntities
+     *
+     * @param bool $decodeHtmlEntities
+     *
+     * @return MicrosoftTranslator
+     */
+    public function setDecodeHtmlEntities($decodeHtmlEntities): MicrosoftTranslator
+    {
+        $this->decodeHtmlEntities = $decodeHtmlEntities;
+
+        return $this;
+    }
+
+    /**
+     * Determines whether string contains HTML tags
+     *
+     * @param string $str
+     *
+     * @return bool
+     */
+    public function containsHtml($str): bool
+    {
+        return $str !== strip_tags($str) ? true : false;
     }
 
     /**
@@ -218,13 +380,14 @@ class MicrosoftTranslator implements MachineTranslator
      *
      * @return string
      */
-    public function getAccessToken()
+    private function getAccessToken(): string
     {
         if ($this->accessToken) {
             return $this->accessToken;
         }
 
-        $url = 'https://api.cognitive.microsoft.com/sts/v1.0/issueToken?Subscription-Key=' . urlencode($this->clientID);
+        $url = 'https://api.cognitive.microsoft.com/sts/v1.0/issueToken?Subscription-Key=' . urlencode($this->clientKey);
+
         // Get a JWT for the Microsoft Translator API.
         $client = new Client();
 
@@ -241,188 +404,14 @@ class MicrosoftTranslator implements MachineTranslator
         return $this->accessToken;
     }
 
-
-    /**
-     * Translates a string
-     *
-     * @param string $word The source string to translate
-     * @param string $from The locale code for the source string
-     * @param string $to The locale to translate into
-     * @return string
-     */
-    public function translate($word, $from, $to)
-    {
-        if (!$word) {
-            return '';
-        }
-		
-        $from = $this->normaliseLanguageCode($from);
-        $to = $this->normaliseLanguageCode($to);
-        
-        if (!$from || !$to) {
-            return '';
-        }
-
-        if ($to === $from) {
-            return $word;
-        }
-        
-        // extract and preserve placeholders
-        $extracted = $this->getPlaceholders($word);
-        $placeholders = [];
-
-        if (count($extracted) > 0) {
-            $placeholders = $this->createPlaceholdersMap($extracted);
-        }
-
-        if (count($placeholders) > 0) {
-            $word = str_replace(array_keys($placeholders), array_values($placeholders), $word);
-        }
-
-        $url = 'http://api.microsofttranslator.com/V2/Http.svc/Translate?text=' . urlencode($word) . '&from=' . $from . '&to=' . $to;
-        $access_token = $this->getAccessToken();
-        
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Authorization:bearer ' . $access_token]);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        $this->response = curl_exec($ch);
-
-        preg_match_all('/<string (.*?)>(.*?)<\/string>/s', $this->response, $matches);
-
-        if (isset($matches[2][0])) {
-            $translated = $matches[2][0];
-            $translated = count($placeholders) > 0 ? str_replace(array_values($placeholders), array_keys($placeholders), $translated) : $translated;
-
-            // fix any html entity conversion that may have been applied
-            if ($this->decodeHtmlEntities === true) {
-                $translated = $this->decodeEntities($translated);
-            }
-            
-            return $translated;
-        }
-
-        return '';
-    }
-    
-    /**
-     * Detects the language for the given string
-     *
-     * @param string $str
-     * @param boolean $normaliseLocaleCode
-     * @return string
-     */
-    public function detectLanguage($str, $normaliseLocaleCode = false)
-    {
-        $access_token = $this->getAccessToken();
-
-        $url = 'http://api.microsofttranslator.com/V2/Http.svc/Detect?text=' . urlencode($str);
-
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Authorization:bearer ' . $access_token]);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        $this->response = curl_exec($ch);
-        
-        preg_match_all('/<string (.*?)>(.*?)<\/string>/s', $this->response, $matches);
-        
-        $result = '';
-        
-        if (isset($matches[2][0]) && $matches[2][0]) {
-            $result = $matches[2][0];
-            if ($normaliseLocaleCode && $this->localeMap) {
-                $map = array_flip($this->localeMap);
-                if (isset($map[$result])) {
-                    $result = $map[$result];
-                }
-            }
-        }
-        
-        return $result;
-    }
-
-    /**
-     * Gets response
-     *
-     * @return string
-     */
-    public function getResponse()
-    {
-        return $this->response;
-    }
-    
-    /**
-     * Sets decodeHtmlEntities
-     *
-     * @param boolean $decodeHtmlEntities
-     * @return \SP\TranslationBundle\Classes\MicrosoftTranslator
-     */
-    public function setDecodeHtmlEntities($decodeHtmlEntities)
-    {
-        $this->decodeHtmlEntities = $decodeHtmlEntities;
-
-        return $this;
-    }
-
-    /**
-     * Matches placeholders within a string
-     *
-     * @param string $str
-     * @return array
-     */
-    public function getPlaceholders($str)
-    {
-        preg_match_all('/%([^%\s]+)%/', $str, $matches);
-
-        return isset($matches[0]) ? $matches[0] : [];
-    }
-
-    /**
-     * Creates array of placeholder keys and values
-     *
-     * @param array $array
-     * @return array
-     */
-    public function createPlaceholdersMap($array)
-    {
-        $result = [];
-
-        foreach ($array as $key => $val) {
-            $result[$val] = '[[' . ($key+1) . ']]';
-        }
-
-        return $result;
-    }
-
-    /**
-     * Determines whether string is a CDATA string
-     *
-     * @param string $str
-     * @return boolean
-     */
-    public function isCdata($str)
-    {
-        return strpos($str, '<![CDATA[') > -1;
-    }
-
-    /**
-     * Determines whether string contains HTML tags
-     *
-     * @param string $str
-     * @return boolean
-     */
-    public function containsHtml($str)
-    {
-        return $str !== strip_tags($str) ? true : false;
-    }
-
     /**
      * Fixes html encoding anomolies returned by the Microsoft translator service and decodes html entities
      *
      * @param string $str
+     *
      * @return string
      */
-    public function decodeEntities($str, $applyCdataTags = false)
+    private function decodeEntities($str, $applyCdataTags = false): string
     {
         // fix any odd html entity conversion
         $find = ['&amp;lt;', '&amp;gt;'];
@@ -440,5 +429,49 @@ class MicrosoftTranslator implements MachineTranslator
         }
 
         return $str;
+    }
+
+    /**
+     * Matches placeholders within a string
+     *
+     * @param string $str
+     *
+     * @return array
+     */
+    private function getPlaceholders($str): array
+    {
+        preg_match_all('/%([^%\s]+)%/', $str, $matches);
+
+        return isset($matches[0]) ? $matches[0] : [];
+    }
+
+    /**
+     * Creates array of placeholder keys and values
+     *
+     * @param array $array
+     *
+     * @return array
+     */
+    private function createPlaceholdersMap($array): array
+    {
+        $result = [];
+
+        foreach ($array as $key => $val) {
+            $result[$val] = '[[' . ($key+1) . ']]';
+        }
+
+        return $result;
+    }
+
+    /**
+     * Determines whether string is a CDATA string
+     *
+     * @param string $str
+     *
+     * @return bool
+     */
+    private function isCdata($str): bool
+    {
+        return strpos($str, '<![CDATA[') > -1;
     }
 }

@@ -14,7 +14,7 @@
  *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -25,7 +25,7 @@
  *
  */
 
-namespace SMACP\MachineTranslator\Classes;
+namespace smacp\MachineTranslator\Classes;
 
 /**
  * Interface MachineTranslator interface
@@ -41,12 +41,12 @@ interface MachineTranslator
      * @param string $from
      * @param string $to
      */
-    public function translate($word, $from, $to);
-    
+    public function translate(string $word, string $from, string $to);
+
     /**
      * Gets api provider name
      *
      * @return string
      */
-    public function getProvider();
+    public function getProvider(): string;
 }

@@ -14,7 +14,7 @@
  *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -25,24 +25,28 @@
  *
  */
 
-namespace SMACP\MachineTranslator\Classes;
+namespace smacp\MachineTranslator\Classes;
+
+use SimpleXMLElement;
 
 /**
  * This class extends SimpleXMLElement
  */
-class SimpleXmlExtended extends \SimpleXMLElement
+class SimpleXmlExtended extends SimpleXMLElement
 {
     /**
      * Writes a string to a node with 'CDATA' tags
      *
      * @param string $str
+     *
+     * @return SimpleXmlExtended
      */
-    public function addCData($str)
+    public function addCData(string $str): SimpleXmlExtended
     {
         $node = dom_import_simplexml($this);
         $oNode = $node->ownerDocument;
         $node->appendChild($oNode->createCDATASection($str));
-        
+
         return $this;
     }
 }

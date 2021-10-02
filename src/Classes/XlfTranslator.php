@@ -14,7 +14,7 @@
  *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -25,9 +25,10 @@
  *
  */
 
-namespace SMACP\MachineTranslator\Classes;
+namespace smacp\MachineTranslator\Classes;
 
-use SMACP\MachineTranslator\Classes\SimpleXmlExtended;
+use Exception;
+use smacp\MachineTranslator\Classes\SimpleXmlExtended;
 
 /**
  * Translates xlf files
@@ -38,317 +39,287 @@ class XlfTranslator
 {
     /** @var MachineTranslator */
     protected $translator;
-    
-    /** @var string */
+
+    /**
+     * The path to the source directory containing the Xlf files to translate.
+     *
+     * @var string
+     */
     protected $dir;
-    
-    /** @var array */
+
+    /**
+     * Array of Xlf filepaths that have been processed.
+     *
+     * @var string[]
+     */
     protected $parsed;
-    
-    /** @var boolean */
+
+    /**
+     * Whether to update Xlf files with translations.
+     *
+     * @var bool
+     */
     protected $commit = true;
-    
-    /** @var array */
+
+    /**
+     * Array of locales that should be translated.
+     *
+     * @var string[]
+     */
     protected $locales = [];
-    
-    /** @var array */
-    protected $excludeLocales = ['en_GB', 'en_US'];
-    
-    /** @var string */
+
+    /**
+     * Array of locales that should be excluded.
+     *
+     * @var string[]
+     */
+    protected $excludedLocales = ['en_GB', 'en_US'];
+
+    /**
+     * The source locale of the Xlf files.
+     *
+     * @var string
+     */
     protected $sourceLocale = 'en_GB';
-    
-    /** @var array */
+
+    /**
+     * Array of catalogues that should be translated e.g. messages, validators etc.
+     *
+     * @var string[]
+     */
     protected $catalogues = [];
-    
-    /** @var boolean */
+
+    /**
+     * Whether to translate 'new' trans units only.
+     *
+     * @var bool
+     */
     protected $newOnly = false;
-    
-    /** @var integer */
+
+    /**
+     * The number of machine translation requests that have failed.
+     *
+     * @var int
+     */
     protected $mtFailCount = 0;
-    
-    /** @var integer */
+
+    /**
+     * The maximum number of failed machine translation requests before the process should exit.
+     *
+     * @var integer
+     */
     protected $maxMtFailCount = 10;
-    
-    /** @var array */
+
+    /**
+     * Custom Xlf trans unit attributes.
+     *
+     * @var string[]
+     */
     protected $attributes = [
         'mt'      => 'machinetranslated',
         'mt_date' => 'datemachinetranslated'
     ];
-    
-    /** @var boolean */
-    protected $memory = true;
-    
-    /** @var boolean */
-    protected $output = true;
-    
-    /** @var boolean */
-    protected $outputTranslated = false;
-    
+
     /**
-     * Get translator
+     * Whether to keep strings that have already been translated. Set to false to re-translate existing translations.
      *
-     * @return MachineTranslator
+     * @var bool
      */
-    public function getTranslator()
+    protected $memory = true;
+
+    /**
+     * Whether to write debug to STDOUT.
+     *
+     * @var bool
+     */
+    protected $output = true;
+
+    /**
+     * Whether to output translated strings during the process.
+     *
+     * @var bool
+     */
+    protected $outputTranslated = false;
+
+    /**
+     * XlfTranslator constructor.
+     *
+     * @param MachineTranslator $translator The MachineTranslator instance
+     * @param string            $dir        The source directory to translate Xlf files in
+     */
+    public function __construct(MachineTranslator $translator, string $dir)
     {
-        return $this->translator;
+        $this->translator = $translator;
+        $this->dir = $dir;
     }
-    
+
     /**
      * Set translator
      *
      * @param MachineTranslator $translator
+     *
      * @return XlfTranslator
      */
-    public function setTranslator(MachineTranslator $translator)
+    public function setTranslator(MachineTranslator $translator): XlfTranslator
     {
         $this->translator = $translator;
-        
+
         return $this;
     }
-    
-    /**
-     * Get locales
-     *
-     * @return array
-     */
-    public function getLocales()
-    {
-        return $this->locales;
-    }
-    
+
     /**
      * Set locales
      *
      * @param array $locales
+     *
      * @return XlfTranslator
      */
-    public function setLocales(array $locales)
+    public function setLocales(array $locales): XlfTranslator
     {
         $this->locales = $locales;
-        
+
         return $this;
     }
-    
-    /**
-     * Get excluded locales
-     *
-     * @return array
-     */
-    public function getExcludedLocales()
-    {
-        return $this->excludedLocales;
-    }
-    
+
     /**
      * Set excludedLocales
      *
      * @param array $locales
+     *
      * @return XlfTranslator
      */
-    public function setExcludedLocales(array $locales)
+    public function setExcludedLocales(array $locales): XlfTranslator
     {
         $this->excludedLocales = $locales;
-        
+
         return $this;
     }
-    
-    /**
-     * Get dir
-     *
-     * @return string
-     */
-    public function getDir()
-    {
-        return $this->dir;
-    }
-    
+
     /**
      * Set dir
      *
      * @param string $dir
+     *
      * @return XlfTranslator
      */
-    public function setDir($dir)
+    public function setDir(string $dir): XlfTranslator
     {
         $this->dir = $dir;
-        
+
         return $this;
     }
-    
-    /**
-     * Get sourceLocale
-     *
-     * @return string
-     */
-    public function getSourceLocale()
-    {
-        return $this->sourceLocale;
-    }
-    
+
     /**
      * Set sourceLocale
      *
      * @param string $locale
+     *
      * @return XlfTranslator
      */
-    public function setSourceLocale($locale)
+    public function setSourceLocale($locale): XlfTranslator
     {
         $this->sourceLocale = $locale;
-        
+
         return $this;
     }
-    
-    /**
-     * Get catalogues
-     *
-     * @return string
-     */
-    public function getCatalogues()
-    {
-        return $this->catalogues;
-    }
-    
+
     /**
      * Set catalogues
      *
      * @param array $catalogues
+     *
      * @return XlfTranslator
      */
-    public function setCatalogues(array $catalogues)
+    public function setCatalogues(array $catalogues): XlfTranslator
     {
         $this->catalogues = $catalogues;
-        
+
         return $this;
     }
-    
-    /**
-     * Get newOnly
-     *
-     * @return boolean
-     */
-    public function getNewOnly()
-    {
-        return $this->newOnly;
-    }
-    
+
     /**
      * Set newOnly
      *
-     * @param boolean $newOnly
+     * @param bool $newOnly
+     *
      * @return XlfTranslator
      */
-    public function setNewOnly($newOnly)
+    public function setNewOnly(bool $newOnly): XlfTranslator
     {
         $this->newOnly = $newOnly;
-        
+
         return $this;
     }
-    
-    /**
-     * Get commit
-     *
-     * @return boolean
-     */
-    public function getCommit()
-    {
-        return $this->commit;
-    }
-    
+
     /**
      * Set commit
      *
-     * @param boolean $commit
+     * @param bool $commit
+     *
      * @return XlfTranslator
      */
-    public function setCommit($commit)
+    public function setCommit(bool $commit): XlfTranslator
     {
         $this->commit = $commit;
-        
+
         return $this;
     }
-    
-    /**
-     * Get output
-     *
-     * @return boolean
-     */
-    public function getOutput()
-    {
-        return $this->output;
-    }
-    
+
     /**
      * Set output
      *
-     * @param boolean $output
+     * @param bool $output
+     *
      * @return XlfTranslator
      */
-    public function setOutput($output)
+    public function setOutput(bool $output): XlfTranslator
     {
         $this->output = $output;
-        
+
         return $this;
     }
-    
-    /**
-     * Get outputTanslated
-     *
-     * @return boolean
-     */
-    public function getOutputTranslated()
-    {
-        return $this->outputTranslated;
-    }
-    
+
     /**
      * Set outputTranslated
      *
-     * @param boolean $outputTranslated
+     * @param bool $outputTranslated
+     *
      * @return XlfTranslator
      */
-    public function setOutputTranslated($outputTranslated)
+    public function setOutputTranslated(bool $outputTranslated): XlfTranslator
     {
         $this->outputTranslated = $outputTranslated;
-        
+
         return $this;
     }
-    
-    /**
-     * Get memory
-     *
-     * @return boolean
-     */
-    public function getMemory()
-    {
-        return $this->memory;
-    }
-    
+
     /**
      * Set memory
      *
-     * @param boolean $memory
+     * @param bool $memory
+     *
      * @return XlfTranslator
      */
-    public function setMemory($memory)
+    public function setMemory(bool $memory): XlfTranslator
     {
         $this->memory = $memory;
-        
+
         return $this;
     }
-    
+
     /**
      * Machine translates
      *
      * @return XlfTranslator
+     *
+     * @throws Exception
      */
-    public function translate()
+    public function translate(): XlfTranslator
     {
         $this->parsed = [];
         $this->mtFailCount = 0;
-        
+
         $provider = $this->translator->getProvider();
-        $catalogues = $this->getCatalogues();
         $cataloguesTranslated = [];
         $cataloguesSkipped = [];
         $localesTranslated = [];
@@ -356,7 +327,7 @@ class XlfTranslator
         $strRequested = 0;
         $strTranslated = 0;
         $filesWritten = 0;
-        
+
         if ($this->output) {
             echo PHP_EOL;
             echo '-----------------------------------------' . PHP_EOL;
@@ -365,46 +336,45 @@ class XlfTranslator
             echo 'MT provider: ' . $provider . PHP_EOL;
             echo PHP_EOL;
         }
-        
+
         if ($dh = opendir($this->dir)) {
-            
             if ($this->output) {
                 echo 'Translating xlf in: ' . $this->dir . PHP_EOL;
                 echo PHP_EOL;
             }
-            
+
             while (false !== ($filename = readdir($dh))) {
                 $filePath = $this->dir . $filename;
                 if (is_file($filePath)) {
                     $parts = explode('.', $filename);
-                    
+
                     if (count($parts) !== 3) {
                         throw new Exception('Cannot parse file. Expected file in format catalogue.locale.xlf.');
                     }
-                    
+
                     if (strpos($filePath, '.xlf') < 0) {
                         throw new Exception('Not a valid xlf file: ' . $filename);
                     }
-                    
+
                     $catalogue = $parts[0];
                     $locale = $parts[1];
-                    
+
                     $i = 0;
-                    
+
                     if (!$this->shouldParseCatalogue($catalogue)) {
                         if (!in_array($catalogue, $cataloguesSkipped)) {
                             $cataloguesSkipped[] = $catalogue;
                         }
                         continue;
                     }
-                    
+
                     if (!$this->shouldParseLocale($locale)) {
                         if (!in_array($locale, $localesSkipped)) {
                             $localesSkipped[] = $locale;
                         }
                         continue;
                     }
-                    
+
                     if ($this->output) {
                         echo 'File: ' . $filename . PHP_EOL;
                         echo 'Catalogue: ' . $catalogue . PHP_EOL;
@@ -417,12 +387,12 @@ class XlfTranslator
                     $contents = file_get_contents($filePath);
                     $xlfData = new SimpleXMLExtended($contents);
                     $new = [];
-                    
+
                     $this->mtFailCount = 0;
 
                     foreach ($xlfData->file->body as $bItem) {
                         $xlfStrTranslated = 0;
-                        
+
                         foreach ($bItem as $bValue) {
                             if ($this->mtFailCount >= $this->maxMtFailCount) {
                                 // skip to the end as we may have hit the flood limit
@@ -447,9 +417,9 @@ class XlfTranslator
                                 if ($this->memory && isset($attributes[$this->attributes['mt']])) {
                                     continue;
                                 }
-                                
+
                                 $strRequested++;
-                                
+
                                 $translated = $this->translator->translate($source, $this->sourceLocale, $locale);
 
                                 if ($translated) {
@@ -469,11 +439,11 @@ class XlfTranslator
                                     } else {
                                         $bValue->target = $translated;
                                     }
-                                    
+
                                     $i++;
                                     $xlfStrTranslated++;
                                     $strTranslated++;
-                                    
+
                                     if ($this->output) {
                                         echo '.';
                                     }
@@ -482,7 +452,7 @@ class XlfTranslator
                                 }
                             }
                         }
-                        
+
                         if ($this->output) {
                             if ($xlfStrTranslated === 0) {
                                 echo 'No strings translated';
@@ -506,11 +476,11 @@ class XlfTranslator
                             $this->write($xlfData, $filePath);
                             $filesWritten++;
                         }
-                        
+
                         if (!in_array($catalogue, $cataloguesTranslated)) {
                             $cataloguesTranslated[] = $catalogue;
                         }
-                        
+
                         $localesTranslated[] = $locale;
 
                         $this->parsed[] = $filename;
@@ -520,7 +490,7 @@ class XlfTranslator
 
             closedir($dh);
         }
-        
+
         if ($this->output) {
             echo PHP_EOL;
             echo 'Done' . PHP_EOL;
@@ -529,11 +499,11 @@ class XlfTranslator
             echo 'Total strings requested: ' . $strRequested . PHP_EOL;
             echo 'Total strings translated: ' . $strTranslated . PHP_EOL;
             echo 'Catalogues translated: ' . (count($cataloguesTranslated) === 0 ? '0' : implode(', ', $cataloguesTranslated)) . PHP_EOL;
-            
+
             if ($cataloguesSkipped) {
                 echo 'Catalogues skipped: ' . implode(', ', $cataloguesSkipped) . PHP_EOL;
             }
-            
+
             if ($localesSkipped) {
                 echo 'Locales skipped: ' .implode(', ', $localesSkipped) . PHP_EOL;
             }
@@ -543,58 +513,62 @@ class XlfTranslator
 
         return $this;
     }
-    
+
     /**
      * Determines whether catalogue should be parsed
      *
      * @param string $catalogue
-     * @return boolean
+     *
+     * @return bool
      */
-    protected function shouldParseCatalogue($catalogue)
+    protected function shouldParseCatalogue(string $catalogue): bool
     {
         if (count($this->catalogues) > 0 && !in_array($catalogue, $this->catalogues)) {
             return false;
         }
-        
+
         return true;
     }
-    
+
     /**
      * Determines whether locale should be parsed
      *
      * @param string $locale
-     * @return boolean
+     *
+     * @return bool
      */
-    protected function shouldParseLocale($locale)
+    protected function shouldParseLocale(string $locale): bool
     {
         if (!$this->translator->normaliseLanguageCode($locale)) {
             return false;
         }
-        
+
         if ($this->locales && !in_array($locale, $this->locales)) {
             return false;
         }
-        
-        if ($this->excludeLocales && in_array($locale, $this->excludeLocales)) {
+
+        if ($this->excludedLocales && in_array($locale, $this->excludedLocales)) {
             return false;
         }
-                    
+
         return $this->sourceLocale !== $locale;
     }
-    
+
     /**
      * Writes to file
      *
      * @param SimpleXMLExtended $xmlData
      * @param string $file
+     *
      * @return XlfTranslator
      */
-    protected function write(SimpleXMLExtended $xmlData, $file)
+    protected function write(SimpleXMLExtended $xmlData, string $file): XlfTranslator
     {
         $xml = $xmlData->asXML();
         $fwh = fopen($file, 'w');
         fwrite($fwh, $xml);
-        
+        fclose($fwh);
+
         return $this;
     }
 }

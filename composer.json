@@ -10,15 +10,23 @@
         }
     ],
     "require": {
-        "php": ">=5.4.0",
-        "guzzlehttp/guzzle": "~6.0"
+        "php": ">=7.3",
+        "ext-dom": "*",
+        "ext-simplexml": "*",
+        "guzzlehttp/guzzle": "^7.3"
     },
     "require-dev": {
-        "composer/composer": "1.0.*@dev",
-        "phpunit/phpunit": "4.8.35"
+        "phpunit/phpunit": "^7.5"
     },
     "autoload": {
-        "psr-4": { "SMACP\\MachineTranslator\\": "src/" }
+        "psr-4": {
+            "smacp\\MachineTranslator\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "smacp\\MachineTranslator\\Tests\\": "tests/"
+        }
     },
     "extra": {
         "branch-alias": {
