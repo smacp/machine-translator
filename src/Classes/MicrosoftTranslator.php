@@ -146,14 +146,14 @@ class MicrosoftTranslator implements MachineTranslator
     /**
      * MicrosoftTranslator Constructor
      *
-     * @param string $clientID
+     * @param string $clientKey
      * @param bool $decodeHtmlEntities
      *
 	 * @return MicrosoftTranslator
      */
-    public function __construct(string $clientID, bool $decodeHtmlEntities = true)
+    public function __construct(string $clientKey, bool $decodeHtmlEntities = true)
     {
-        $this->clientKey = $clientID;
+        $this->clientKey = $clientKey;
         $this->decodeHtmlEntities = $decodeHtmlEntities;
     }
 
