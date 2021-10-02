@@ -348,12 +348,15 @@ class XlfTranslator
                 if (is_file($filePath)) {
                     $parts = explode('.', $filename);
 
-                    if (count($parts) !== 3) {
-                        throw new Exception('Cannot parse file. Expected file in format catalogue.locale.xlf.');
+                    if (strpos($filePath, '.xlf') === false) {
+                        if ($this->output) {
+                            echo 'Not an xlf file. Skipping ' . $filePath . PHP_EOL;
+                        }
+                        continue;
                     }
 
-                    if (strpos($filePath, '.xlf') < 0) {
-                        throw new Exception('Not a valid xlf file: ' . $filename);
+                    if (count($parts) !== 3) {
+                        throw new Exception('Cannot parse file. Expected file in format catalogue.locale.xlf.');
                     }
 
                     $catalogue = $parts[0];
