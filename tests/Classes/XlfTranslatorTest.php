@@ -24,15 +24,15 @@ class XlfTranslatorTest extends TestCase
 
     public function testTranslate()
     {
-        $this->markTestIncomplete();
+        //$this->markTestIncomplete();
 
         $translator = new MicrosoftTranslator(testConfig::MICROSOFT_KEY);
         $translator->setLocaleMap($this->localeMap);
 
         $xlfTranslator = new XlfTranslator($translator, dirname(__FILE__) . '/../xlf/');
         $xlfTranslator->setMemory(false)
-          ->setCommit(false)
-          ->setOutput(true);
+            ->setOutput(true)
+            ->setCommit(false);
 
         $xlfTranslator->translate();
     }

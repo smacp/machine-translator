@@ -28,6 +28,9 @@
 namespace smacp\MachineTranslator\Classes;
 
 use Exception;
+use Psr\Log\LoggerInterface;
+use Psr\Log\LogLevel;
+use smacp\MachineTranslator\Classes\Logger\Logger;
 use smacp\MachineTranslator\Classes\SimpleXmlExtended;
 
 /**
@@ -39,6 +42,9 @@ class XlfTranslator
 {
     /** @var MachineTranslator */
     protected $translator;
+
+    /** @var LoggerInterface */
+    protected $logger;
 
     /**
      * The path to the source directory containing the Xlf files to translate.
@@ -146,11 +152,17 @@ class XlfTranslator
      *
      * @param MachineTranslator $translator The MachineTranslator instance
      * @param string            $dir        The source directory to translate Xlf files in
+     * @param LoggerInterface|null $logger  LoggerInterface instance to log process output
+     *
      */
-    public function __construct(MachineTranslator $translator, string $dir)
+    public function __construct(MachineTranslator $translator, string $dir, ?LoggerInterface $logger = null)
     {
         $this->translator = $translator;
         $this->dir = $dir;
+
+        if (!$logger instanceof LoggerInterface) {
+            $this->logger = new Logger();
+        }
     }
 
     /**
@@ -329,31 +341,31 @@ class XlfTranslator
         $filesWritten = 0;
 
         if ($this->output) {
-            echo PHP_EOL;
-            echo '-----------------------------------------' . PHP_EOL;
-            echo 'XlfTranslator' . PHP_EOL;
-            echo '-----------------------------------------' . PHP_EOL;
-            echo 'MT provider: ' . $provider . PHP_EOL;
-            echo PHP_EOL;
+            $this->logger->info( '-----------------------------------------');
+            $this->logger->info('XlfTranslator');
+            $this->logger->info('-----------------------------------------');
+            $this->logger->info('MT provider: ' . $provider);
+            $this->logger->info('');
         }
 
         if ($dh = opendir($this->dir)) {
             if ($this->output) {
-                echo 'Translating xlf in: ' . $this->dir . PHP_EOL;
-                echo PHP_EOL;
+                $this->logger->log(LogLevel::INFO, 'Translating xlf in: ' . $this->dir);
+                $this->logger->log(LogLevel::INFO, '');
             }
 
             while (false !== ($filename = readdir($dh))) {
                 $filePath = $this->dir . $filename;
-                if (is_file($filePath)) {
-                    $parts = explode('.', $filename);
 
+                if (is_file($filePath)) {
                     if (strpos($filePath, '.xlf') === false) {
                         if ($this->output) {
-                            echo 'Not an xlf file. Skipping ' . $filePath . PHP_EOL;
+                            $this->logger->warning('Not an xlf file. Skipping ' . $filePath);
                         }
                         continue;
                     }
+
+                    $parts = explode('.', $filename);
 
                     if (count($parts) !== 3) {
                         throw new Exception('Cannot parse file. Expected file in format catalogue.locale.xlf.');
@@ -361,8 +373,6 @@ class XlfTranslator
 
                     $catalogue = $parts[0];
                     $locale = $parts[1];
-
-                    $i = 0;
 
                     if (!$this->shouldParseCatalogue($catalogue)) {
                         if (!in_array($catalogue, $cataloguesSkipped)) {
@@ -379,38 +389,38 @@ class XlfTranslator
                     }
 
                     if ($this->output) {
-                        echo 'File: ' . $filename . PHP_EOL;
-                        echo 'Catalogue: ' . $catalogue . PHP_EOL;
-                        echo 'Locale: ' . $locale . PHP_EOL;
-                        echo 'MT locale: ' . $this->translator->normaliseLanguageCode($locale) . PHP_EOL;
-                        echo PHP_EOL;
-                        echo 'P: ';
+                        $this->logger->info('File: ' . $filename);
+                        $this->logger->info('Catalogue: ' . $catalogue);
+                        $this->logger->info('Locale: ' . $locale);
+                        $this->logger->info('MT locale: ' . $this->translator->normaliseLanguageCode($locale));
                     }
 
-                    $contents = file_get_contents($filePath);
-                    $xlfData = new SimpleXMLExtended($contents);
-                    $new = [];
+                    $xlfData = new SimpleXMLExtended(file_get_contents($filePath));
 
+                    $new = [];
+                    $i = 0;
                     $this->mtFailCount = 0;
 
-                    foreach ($xlfData->file->body as $bItem) {
+                    foreach ($xlfData->file->body as $element) {
                         $xlfStrTranslated = 0;
 
-                        foreach ($bItem as $bValue) {
+                        foreach ($element as $transUnit) {
                             if ($this->mtFailCount >= $this->maxMtFailCount) {
-                                // skip to the end as we may have hit the flood limit
+                                // skip to the end as we may have hit the rate limit
                                 continue;
                             }
 
-                            $targetAttributes = $bValue->target->attributes();
+                            $targetAttributes = $transUnit->target->attributes();
 
-                            if ($this->newOnly === true && (!isset($targetAttributes['state']) || (string) $targetAttributes['state'] !== 'new')) {
+                            if ($this->newOnly === true &&
+                                (!isset($targetAttributes['state']) || (string) $targetAttributes['state'] !== 'new')
+                            ) {
                                 continue;
                             }
 
-                            $source = (string) $bValue->source;
-                            $target = (string) $bValue->target;
-                            $attributes = $bValue->attributes();
+                            $source = (string) $transUnit->source;
+                            $target = (string) $transUnit->target;
+                            $attributes = $transUnit->attributes();
 
                             if ($source && $target) {
                                 if ($source !== $target) {
@@ -430,26 +440,22 @@ class XlfTranslator
                                     $new[$i]['target'] = $translated;
 
                                     if (!isset($attributes[$this->attributes['mt']])) {
-                                        $bValue->addAttribute($this->attributes['mt'], 1);
-                                        $bValue->addAttribute($this->attributes['mt_date'], date('Y-m-d H:i:s'));
+                                        $transUnit->addAttribute($this->attributes['mt'], 1);
+                                        $transUnit->addAttribute($this->attributes['mt_date'], date('Y-m-d H:i:s'));
                                     }
 
-                                    $bValue->attributes()->{$this->attributes['mt']} = 1;
+                                    $transUnit->attributes()->{$this->attributes['mt']} = 1;
 
                                     if ($this->translator->containsHtml($translated)) {
-                                        $bValue->target = null;
-                                        $bValue->target->addCData($translated);
+                                        $transUnit->target = null;
+                                        $transUnit->target->addCData($translated);
                                     } else {
-                                        $bValue->target = $translated;
+                                        $transUnit->target = $translated;
                                     }
 
                                     $i++;
                                     $xlfStrTranslated++;
                                     $strTranslated++;
-
-                                    if ($this->output) {
-                                        echo '.';
-                                    }
                                 } else {
                                     $this->mtFailCount++;
                                 }
@@ -458,21 +464,21 @@ class XlfTranslator
 
                         if ($this->output) {
                             if ($xlfStrTranslated === 0) {
-                                echo 'No strings translated';
+                                $this->logger->warning('No strings translated');
+                            } else {
+                                $this->logger->info('Strings translated: ' . $xlfStrTranslated);
                             }
-                            echo PHP_EOL;
-                            echo 'T: ' . $xlfStrTranslated . PHP_EOL;
-                            echo PHP_EOL;
+                            $this->logger->info('');
                         }
                     }
 
                     if (count($new) > 0) {
                         if ($this->output && $this->outputTranslated) {
                             foreach ($new as $key => $row) {
-                                echo '[#' . ($key+1) . '] Source: ' . $row['source'] . PHP_EOL;
-                                echo '[#' . ($key+1) . '] Translated: ' . $row['target'] . PHP_EOL;
+                                $this->logger->info('[#' . ($key+1) . '] Source: ' . $row['source']);
+                                $this->logger->info('[#' . ($key+1) . '] Translated: ' . $row['target']);
                             }
-                            echo PHP_EOL;
+                            $this->logger->info('');
                         }
 
                         if ($this->commit === true) {
@@ -495,23 +501,23 @@ class XlfTranslator
         }
 
         if ($this->output) {
-            echo PHP_EOL;
-            echo 'Done' . PHP_EOL;
-            echo '-----------------------------------------' . PHP_EOL;
-            echo 'Total locales translated: ' . count($localesTranslated) . PHP_EOL;
-            echo 'Total strings requested: ' . $strRequested . PHP_EOL;
-            echo 'Total strings translated: ' . $strTranslated . PHP_EOL;
-            echo 'Catalogues translated: ' . (count($cataloguesTranslated) === 0 ? '0' : implode(', ', $cataloguesTranslated)) . PHP_EOL;
+            $this->logger->info('');
+            $this->logger->info('Done');
+            $this->logger->info('-----------------------------------------');
+            $this->logger->info('Total locales translated: ' . count($localesTranslated));
+            $this->logger->info('Total strings requested: ' . $strRequested);
+            $this->logger->info('Total strings translated: ' . $strTranslated);
+            $this->logger->info('Catalogues translated: ' . (count($cataloguesTranslated) === 0 ? '0' : implode(', ', $cataloguesTranslated)));
 
             if ($cataloguesSkipped) {
-                echo 'Catalogues skipped: ' . implode(', ', $cataloguesSkipped) . PHP_EOL;
+                $this->logger->info('Catalogues skipped: ' . implode(', ', $cataloguesSkipped));
             }
 
             if ($localesSkipped) {
-                echo 'Locales skipped: ' .implode(', ', $localesSkipped) . PHP_EOL;
+                $this->logger->info('Locales skipped: ' .implode(', ', $localesSkipped));
             }
 
-            echo 'xlf updated: ' . $filesWritten . PHP_EOL;
+            $this->logger->info('xlf updated: ' . $filesWritten);
         }
 
         return $this;
@@ -567,9 +573,8 @@ class XlfTranslator
      */
     protected function write(SimpleXMLExtended $xmlData, string $file): XlfTranslator
     {
-        $xml = $xmlData->asXML();
         $fwh = fopen($file, 'w');
-        fwrite($fwh, $xml);
+        fwrite($fwh, $xmlData->asXML());
         fclose($fwh);
 
         return $this;
