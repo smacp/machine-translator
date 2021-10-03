@@ -332,6 +332,7 @@ class XlfTranslator
                 if (is_file($filePath)) {
                     if (strpos($filePath, self::XLIFF_FILE_EXTENSION) === false) {
                         $this->logger->warning('Not an xlf file. Skipping ' . $filePath);
+                        $this->logger->info('');
                         continue;
                     }
 
