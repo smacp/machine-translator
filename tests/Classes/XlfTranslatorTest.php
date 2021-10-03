@@ -3,6 +3,7 @@
 namespace smacp\MachineTranslator\Tests\Classes;
 
 use PHPUnit\Framework\TestCase;
+use smacp\MachineTranslator\Classes\Logger\NullLogger;
 use smacp\MachineTranslator\Tests\testConfig;
 use smacp\MachineTranslator\Classes\MicrosoftTranslator;
 use smacp\MachineTranslator\Classes\XlfTranslator;
@@ -24,16 +25,13 @@ class XlfTranslatorTest extends TestCase
 
     public function testTranslate()
     {
-        //$this->markTestIncomplete();
+        $this->markTestIncomplete();
 
         $translator = new MicrosoftTranslator(testConfig::MICROSOFT_KEY);
         $translator->setLocaleMap($this->localeMap);
 
         $xlfTranslator = new XlfTranslator($translator, dirname(__FILE__) . '/../xlf/');
-        $xlfTranslator->setMemory(false)
-            ->setOutput(true)
-            ->setCommit(false);
-
+        $xlfTranslator->setCommit(false);
         $xlfTranslator->translate();
     }
 }

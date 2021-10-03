@@ -19,7 +19,6 @@ class NullLogger implements LoggerInterface
      */
     public function debug($message, array $context = []): void
     {
-
     }
 
     /**
@@ -28,7 +27,6 @@ class NullLogger implements LoggerInterface
      */
     public function critical($message, array $context = []): void
     {
-
     }
 
     /**
@@ -38,7 +36,6 @@ class NullLogger implements LoggerInterface
      */
     public function log($level, $message, array $context = []): void
     {
-        echo $message . PHP_EOL;
     }
 
     /**
@@ -47,7 +44,6 @@ class NullLogger implements LoggerInterface
      */
     public function alert($message, array $context = []): void
     {
-
     }
 
     /**
@@ -56,7 +52,6 @@ class NullLogger implements LoggerInterface
      */
     public function warning($message, array $context = []): void
     {
-
     }
 
     /**
@@ -65,7 +60,6 @@ class NullLogger implements LoggerInterface
      */
     public function error($message, array $context = []): void
     {
-
     }
 
     /**
@@ -74,7 +68,6 @@ class NullLogger implements LoggerInterface
      */
     public function emergency($message, array $context = []): void
     {
-
     }
 
     /**
@@ -83,7 +76,6 @@ class NullLogger implements LoggerInterface
      */
     public function info($message, array $context = []): void
     {
-
     }
 
     /**
@@ -92,6 +84,5 @@ class NullLogger implements LoggerInterface
      */
     public function notice($message, array $context = []): void
     {
-
     }
 }

@@ -29,7 +29,6 @@ namespace smacp\MachineTranslator\Classes;
 
 use Exception;
 use Psr\Log\LoggerInterface;
-use Psr\Log\LogLevel;
 use smacp\MachineTranslator\Classes\Logger\Logger;
 use smacp\MachineTranslator\Classes\SimpleXmlExtended;
 
@@ -40,6 +39,9 @@ use smacp\MachineTranslator\Classes\SimpleXmlExtended;
  */
 class XlfTranslator
 {
+    /** @var string */
+    private const XLIFF_FILE_EXTENSION = '.xlf';
+
     /** @var MachineTranslator */
     protected $translator;
 
@@ -117,31 +119,17 @@ class XlfTranslator
     protected $maxMtFailCount = 10;
 
     /**
-     * Custom Xlf trans unit attributes.
+     * Custom Xlf trans-unit attributes used and written by the process.
      *
      * @var string[]
      */
     protected $attributes = [
-        'mt'      => 'machinetranslated',
-        'mt_date' => 'datemachinetranslated'
+        'machineTranslated' => 'machinetranslated',
+        'machineTranslatedDate' => 'datemachinetranslated'
     ];
 
     /**
-     * Whether to keep strings that have already been translated. Set to false to re-translate existing translations.
-     *
-     * @var bool
-     */
-    protected $memory = true;
-
-    /**
-     * Whether to write debug to STDOUT.
-     *
-     * @var bool
-     */
-    protected $output = true;
-
-    /**
-     * Whether to output translated strings during the process.
+     * Whether to output translated strings to the log during the process.
      *
      * @var bool
      */
@@ -161,8 +149,10 @@ class XlfTranslator
         $this->dir = $dir;
 
         if (!$logger instanceof LoggerInterface) {
-            $this->logger = new Logger();
+            $logger = new Logger();
         }
+
+        $this->logger = $logger;
     }
 
     /**
@@ -175,6 +165,20 @@ class XlfTranslator
     public function setTranslator(MachineTranslator $translator): XlfTranslator
     {
         $this->translator = $translator;
+
+        return $this;
+    }
+
+    /**
+     * Set logger
+     *
+     * @param LoggerInterface $logger
+     *
+     * @return $this
+     */
+    public function setLogger(LoggerInterface $logger): XlfTranslator
+    {
+        $this->logger = $logger;
 
         return $this;
     }
@@ -228,7 +232,7 @@ class XlfTranslator
      *
      * @return XlfTranslator
      */
-    public function setSourceLocale($locale): XlfTranslator
+    public function setSourceLocale(string $locale): XlfTranslator
     {
         $this->sourceLocale = $locale;
 
@@ -278,20 +282,6 @@ class XlfTranslator
     }
 
     /**
-     * Set output
-     *
-     * @param bool $output
-     *
-     * @return XlfTranslator
-     */
-    public function setOutput(bool $output): XlfTranslator
-    {
-        $this->output = $output;
-
-        return $this;
-    }
-
-    /**
      * Set outputTranslated
      *
      * @param bool $outputTranslated
@@ -301,20 +291,6 @@ class XlfTranslator
     public function setOutputTranslated(bool $outputTranslated): XlfTranslator
     {
         $this->outputTranslated = $outputTranslated;
-
-        return $this;
-    }
-
-    /**
-     * Set memory
-     *
-     * @param bool $memory
-     *
-     * @return XlfTranslator
-     */
-    public function setMemory(bool $memory): XlfTranslator
-    {
-        $this->memory = $memory;
 
         return $this;
     }
@@ -340,28 +316,22 @@ class XlfTranslator
         $strTranslated = 0;
         $filesWritten = 0;
 
-        if ($this->output) {
-            $this->logger->info( '-----------------------------------------');
-            $this->logger->info('XlfTranslator');
-            $this->logger->info('-----------------------------------------');
-            $this->logger->info('MT provider: ' . $provider);
-            $this->logger->info('');
-        }
+        $this->logger->info('-----------------------------------------');
+        $this->logger->info('XlfTranslator');
+        $this->logger->info('-----------------------------------------');
+        $this->logger->info('MT provider: ' . $provider);
+        $this->logger->info('');
 
         if ($dh = opendir($this->dir)) {
-            if ($this->output) {
-                $this->logger->log(LogLevel::INFO, 'Translating xlf in: ' . $this->dir);
-                $this->logger->log(LogLevel::INFO, '');
-            }
+            $this->logger->info('Translating xlf in: ' . $this->dir);
+            $this->logger->info('');
 
             while (false !== ($filename = readdir($dh))) {
                 $filePath = $this->dir . $filename;
 
                 if (is_file($filePath)) {
-                    if (strpos($filePath, '.xlf') === false) {
-                        if ($this->output) {
-                            $this->logger->warning('Not an xlf file. Skipping ' . $filePath);
-                        }
+                    if (strpos($filePath, self::XLIFF_FILE_EXTENSION) === false) {
+                        $this->logger->warning('Not an xlf file. Skipping ' . $filePath);
                         continue;
                     }
 
@@ -388,12 +358,10 @@ class XlfTranslator
                         continue;
                     }
 
-                    if ($this->output) {
-                        $this->logger->info('File: ' . $filename);
-                        $this->logger->info('Catalogue: ' . $catalogue);
-                        $this->logger->info('Locale: ' . $locale);
-                        $this->logger->info('MT locale: ' . $this->translator->normaliseLanguageCode($locale));
-                    }
+                    $this->logger->info('File: ' . $filename);
+                    $this->logger->info('Catalogue: ' . $catalogue);
+                    $this->logger->info('Locale: ' . $locale);
+                    $this->logger->info('MT locale: ' . $this->translator->normaliseLanguageCode($locale));
 
                     $xlfData = new SimpleXMLExtended(file_get_contents($filePath));
 
@@ -410,24 +378,22 @@ class XlfTranslator
                                 continue;
                             }
 
+                            $attributes = $transUnit->attributes();
                             $targetAttributes = $transUnit->target->attributes();
 
                             if ($this->newOnly === true &&
                                 (!isset($targetAttributes['state']) || (string) $targetAttributes['state'] !== 'new')
                             ) {
+                                // target string is not a 'new' translation
                                 continue;
                             }
 
                             $source = (string) $transUnit->source;
                             $target = (string) $transUnit->target;
-                            $attributes = $transUnit->attributes();
 
                             if ($source && $target) {
                                 if ($source !== $target) {
-                                    continue;
-                                }
-
-                                if ($this->memory && isset($attributes[$this->attributes['mt']])) {
+                                    // target is already translated
                                     continue;
                                 }
 
@@ -439,12 +405,21 @@ class XlfTranslator
                                     $new[$i]['source'] = $source;
                                     $new[$i]['target'] = $translated;
 
-                                    if (!isset($attributes[$this->attributes['mt']])) {
-                                        $transUnit->addAttribute($this->attributes['mt'], 1);
-                                        $transUnit->addAttribute($this->attributes['mt_date'], date('Y-m-d H:i:s'));
+                                    $mtAttr = $this->attributes['machineTranslated'];
+                                    $mtDateAttr = $this->attributes['machineTranslatedDate'];
+                                    $mtDate = date('Y-m-d H:i:s');
+
+                                    if (!isset($attributes[$mtAttr])) {
+                                        $transUnit->addAttribute($mtAttr, 1);
+                                    } else {
+                                        $transUnit->attributes()->{$mtAttr} = 1;
                                     }
 
-                                    $transUnit->attributes()->{$this->attributes['mt']} = 1;
+                                    if (!isset($attributes[$mtDateAttr])) {
+                                        $transUnit->addAttribute($mtDateAttr, $mtDate);
+                                    } else {
+                                        $transUnit->attributes()->{$mtDateAttr} = $mtDate;
+                                    }
 
                                     if ($this->translator->containsHtml($translated)) {
                                         $transUnit->target = null;
@@ -462,18 +437,17 @@ class XlfTranslator
                             }
                         }
 
-                        if ($this->output) {
-                            if ($xlfStrTranslated === 0) {
-                                $this->logger->warning('No strings translated');
-                            } else {
-                                $this->logger->info('Strings translated: ' . $xlfStrTranslated);
-                            }
-                            $this->logger->info('');
+                        if ($xlfStrTranslated === 0) {
+                            $this->logger->warning('No strings translated');
+                        } else {
+                            $this->logger->info('Strings translated: ' . $xlfStrTranslated);
                         }
+
+                        $this->logger->info('');
                     }
 
                     if (count($new) > 0) {
-                        if ($this->output && $this->outputTranslated) {
+                        if ($this->outputTranslated) {
                             foreach ($new as $key => $row) {
                                 $this->logger->info('[#' . ($key+1) . '] Source: ' . $row['source']);
                                 $this->logger->info('[#' . ($key+1) . '] Translated: ' . $row['target']);
@@ -500,25 +474,25 @@ class XlfTranslator
             closedir($dh);
         }
 
-        if ($this->output) {
-            $this->logger->info('');
-            $this->logger->info('Done');
-            $this->logger->info('-----------------------------------------');
-            $this->logger->info('Total locales translated: ' . count($localesTranslated));
-            $this->logger->info('Total strings requested: ' . $strRequested);
-            $this->logger->info('Total strings translated: ' . $strTranslated);
-            $this->logger->info('Catalogues translated: ' . (count($cataloguesTranslated) === 0 ? '0' : implode(', ', $cataloguesTranslated)));
+        $this->logger->info('');
+        $this->logger->info('Summary');
+        $this->logger->info('-----------------------------------------');
+        $this->logger->info('Total locales translated: ' . count($localesTranslated));
+        $this->logger->info('Total strings requested: ' . $strRequested);
+        $this->logger->info('Total strings translated: ' . $strTranslated);
+        $this->logger->info('Catalogues translated: ' . (count($cataloguesTranslated) === 0 ? '0' : implode(', ', $cataloguesTranslated)));
 
-            if ($cataloguesSkipped) {
-                $this->logger->info('Catalogues skipped: ' . implode(', ', $cataloguesSkipped));
-            }
-
-            if ($localesSkipped) {
-                $this->logger->info('Locales skipped: ' .implode(', ', $localesSkipped));
-            }
-
-            $this->logger->info('xlf updated: ' . $filesWritten);
+        if ($cataloguesSkipped) {
+            $this->logger->info('Catalogues skipped: ' . implode(', ', $cataloguesSkipped));
         }
+
+        if ($localesSkipped) {
+            $this->logger->info('Locales skipped: ' .implode(', ', $localesSkipped));
+        }
+
+        $this->logger->info('xlf updated: ' . $filesWritten);
+        $this->logger->info('');
+        $this->logger->info('Done');
 
         return $this;
     }
