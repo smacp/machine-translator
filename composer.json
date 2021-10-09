@@ -11,6 +11,7 @@
     ],
     "require": {
         "php": ">=7.3",
+        "ext-json": "*",
         "ext-dom": "*",
         "ext-simplexml": "*",
         "guzzlehttp/guzzle": "^7.3",
