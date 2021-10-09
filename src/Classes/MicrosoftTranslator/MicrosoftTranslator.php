@@ -89,11 +89,11 @@ class MicrosoftTranslator implements MachineTranslator
     /**
      * The Microsoft Translation subscription secret key.
      *
-     * This value should be a valid secret key for the Translator API subscription NOT the subscription id.
+     * This value should be a valid secret key for the Translator API subscription NOT the subscription id itself.
      *
      * @var string
      */
-    private $clientKey;
+    private $subscriptionKey;
 
     /**
      * The Microsoft Translation base URL e.g. api.cognitive.microsofttranslator.com.
@@ -192,16 +192,16 @@ class MicrosoftTranslator implements MachineTranslator
     /**
      * MicrosoftTranslator Constructor
      *
-     * @param string $clientKey The Microsoft secret key for the Translator subscription
-     * @param string $region    The Microsoft Translator region
-     * @param string $baseUrl   The Mircosoft Translator base URL e.g. api.cognitive.microsofttranslator.com
+     * @param string $subscriptionKey The Microsoft secret key for the Translator subscription
+     * @param string $region          The Microsoft Translator region
+     * @param string $baseUrl         The Microsoft Translator base URL e.g. api.cognitive.microsofttranslator.com
      */
     public function __construct(
-        string $clientKey,
+        string $subscriptionKey,
         string $region,
         string $baseUrl = self::GLOBAL_BASE_URL
     ) {
-        $this->clientKey = $clientKey;
+        $this->subscriptionKey = $subscriptionKey;
         $this->region = $region;
         $this->baseUrl = $baseUrl;
     }
@@ -420,7 +420,7 @@ class MicrosoftTranslator implements MachineTranslator
      *
      * @return bool
      */
-    private function containsHtml(string $str): bool
+    public function containsHtml(string $str): bool
     {
         return $str !== strip_tags($str);
     }
@@ -467,7 +467,7 @@ class MicrosoftTranslator implements MachineTranslator
         return [
             'Content-Type' => 'application/json',
             'Ocp-Apim-Subscription-Region' => $this->region,
-            'Ocp-Apim-Subscription-Key' => $this->clientKey,
+            'Ocp-Apim-Subscription-Key' => $this->subscriptionKey,
         ];
     }
 }
