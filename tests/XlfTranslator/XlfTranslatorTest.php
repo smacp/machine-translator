@@ -57,13 +57,13 @@ class XlfTranslatorTest extends TestCase
 
     public function testTranslate()
     {
-        //$this->markTestIncomplete();
+        $this->markTestIncomplete();
 
         $translator = new MicrosoftTranslator(testConfig::MICROSOFT_KEY, testConfig::MICROSOFT_REGION);
         $translator->setLocaleMap($this->localeMap);
 
         $xlfTranslator = new XlfTranslator($translator, dirname(__FILE__) . '/../xlf/');
-        //$xlfTranslator->setCommit(false);
+        $xlfTranslator->setCommit(false);
         $xlfTranslator->translate();
     }
 }
