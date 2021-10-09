@@ -30,20 +30,20 @@ declare(strict_types=1);
 namespace smacp\MachineTranslator\Tests\XlfTranslator;
 
 use PHPUnit\Framework\TestCase;
-use smacp\MachineTranslator\Logger\NullLogger;
-use smacp\MachineTranslator\Tests\testConfig;
 use smacp\MachineTranslator\MicrosoftTranslator\MicrosoftTranslator;
 use smacp\MachineTranslator\XlfTranslator\XlfTranslator;
 
 /**
  * Class XlfTranslatorTest
  *
+ * vendor/bin/phpunit --filter MicrosoftTranslatorTest
+ *
  * @package smacp\MachineTranslator\Tests\XlfTranslator
  */
 class XlfTranslatorTest extends TestCase
 {
-    /** @var array */
-    protected $localeMap = [
+    /** @var string[] */
+    private $localeMap = [
 	    'ar_SY' => 'ar',
         'ca_ES' => 'ca',
         'cs_CZ' => 'cs',
@@ -51,15 +51,19 @@ class XlfTranslatorTest extends TestCase
         'en_US' => 'en',
         'es_ES' => 'es',
         'he_HE' => 'he',
-        'zh_CN' => 'zh-CHS',
-        'zh_TW' => 'zh-CHT',
+        'zh_CN' => 'zh-Hans',
+        'zh_TW' => 'zh-Hant',
     ];
 
     public function testTranslate()
     {
         $this->markTestIncomplete();
 
-        $translator = new MicrosoftTranslator(testConfig::MICROSOFT_KEY, testConfig::MICROSOFT_REGION);
+        $translator = new MicrosoftTranslator(
+            getenv('MICROSOFT_SUBSCRIPTION_KEY'),
+            getenv('MICROSOFT_SUBSCRIPTION_REGION')
+        );
+
         $translator->setLocaleMap($this->localeMap);
 
         $xlfTranslator = new XlfTranslator($translator, dirname(__FILE__) . '/../xlf/');

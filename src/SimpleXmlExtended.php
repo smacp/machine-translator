@@ -25,6 +25,8 @@
  *
  */
 
+declare(strict_types=1);
+
 namespace smacp\MachineTranslator;
 
 use SimpleXMLElement;

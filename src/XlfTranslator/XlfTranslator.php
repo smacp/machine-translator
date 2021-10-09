@@ -32,6 +32,7 @@ use Psr\Log\LoggerInterface;
 use smacp\MachineTranslator\Logger\Logger;
 use smacp\MachineTranslator\SimpleXmlExtended;
 use smacp\MachineTranslator\MachineTranslator;
+use smacp\MachineTranslator\Utils\StringHelper;
 
 /**
  * Class XlfTranslator
@@ -427,7 +428,7 @@ class XlfTranslator
                                         $transUnit->attributes()->{$mtDateAttr} = $mtDate;
                                     }
 
-                                    if ($this->translator->containsHtml($translated)) {
+                                    if (StringHelper::containsHtml($translated)) {
                                         $transUnit->target = null;
                                         $transUnit->target->addCData($translated);
                                     } else {

@@ -32,18 +32,19 @@ namespace smacp\MachineTranslator\Tests\MicrosoftTranslator;
 use Generator;
 use PHPUnit\Framework\TestCase;
 use smacp\MachineTranslator\MicrosoftTranslator\MicrosoftTranslatorCategory;
-use smacp\MachineTranslator\Tests\testConfig;
 use smacp\MachineTranslator\MicrosoftTranslator\MicrosoftTranslator;
 
 /**
  * Class MicrosoftTranslatorTest
  *
+ * vendor/bin/phpunit --filter MicrosoftTranslatorTest
+ *
  * @package smacp\MachineTranslator\Tests\MicrosoftTranslator
  */
 class MicrosoftTranslatorTest extends TestCase
 {
-    /** @var array */
-    protected $localeMap = [
+    /** @var string[] */
+    private $localeMap = [
 	    'ar_SY' => 'ar',
         'ca_ES' => 'ca',
         'cs_CZ' => 'cs',
@@ -51,10 +52,13 @@ class MicrosoftTranslatorTest extends TestCase
         'en_US' => 'en',
         'es_ES' => 'es',
         'he_HE' => 'he',
-        'zh_CN' => 'zh-CHS',
-        'zh_TW' => 'zh-CHT',
+        'zh_CN' => 'zh-Hans',
+        'zh_TW' => 'zh-Hant',
     ];
 
+    /**
+     * vendor/bin/phpunit --filter MicrosoftTranslatorTest::testSetLocaleMap
+     */
     public function testSetLocaleMap()
     {
         $translator = $this->getMicrosoftTranslatorInstance();
@@ -96,6 +100,9 @@ class MicrosoftTranslatorTest extends TestCase
         yield 'en -> es HTML' => ['en_GB', 'es_ES', '<a href="#">Hello</a>', [],  '<a href="#">Hola</a>'];
     }
 
+    /**
+     * vendor/bin/phpunit --filter MicrosoftTranslatorTest::testTranslateRetainPlaceHolders
+     */
     public function testTranslateRetainPlaceHolders()
     {
         $translator = $this->getMicrosoftTranslatorInstance();
@@ -106,6 +113,9 @@ class MicrosoftTranslatorTest extends TestCase
         $this->assertEquals('Hola %name%', $result);
     }
 
+    /**
+     * vendor/bin/phpunit --filter MicrosoftTranslatorTest::testDetectLanguage
+     */
     public function testDetectLanguage()
     {
         $translator = $this->getMicrosoftTranslatorInstance();
@@ -116,7 +126,10 @@ class MicrosoftTranslatorTest extends TestCase
         $this->assertEquals('es', $result);
     }
 
-    public function testDetectLanguageAndReturnMyLanguageCode()
+    /**
+     * vendor/bin/phpunit --filter MicrosoftTranslatorTest::testDetectLanguageReturnsMappedLocaleCodes
+     */
+    public function testDetectLanguageReturnsMappedLocaleCodes()
     {
         $translator = $this->getMicrosoftTranslatorInstance();
         $translator->setLocaleMap($this->localeMap);
@@ -126,8 +139,24 @@ class MicrosoftTranslatorTest extends TestCase
         $this->assertEquals('es_ES', $result);
     }
 
+    /**
+     * vendor/bin/phpunit --filter MicrosoftTranslatorTest::testGetLanguages
+     */
+    public function testGetLanguages()
+    {
+        $translator = $this->getMicrosoftTranslatorInstance();
+
+        $result = $translator->getLanguages();
+
+        $this->assertArrayHasKey('translation', $result);
+        $this->assertNotEmpty($result['translation']);
+    }
+
+    /**
+     * @return MicrosoftTranslator
+     */
     private function getMicrosoftTranslatorInstance(): MicrosoftTranslator
     {
-        return new MicrosoftTranslator(testConfig::MICROSOFT_KEY, testConfig::MICROSOFT_REGION);
+        return new MicrosoftTranslator(getenv('MICROSOFT_SUBSCRIPTION_KEY'), getenv('MICROSOFT_SUBSCRIPTION_REGION'));
     }
 }

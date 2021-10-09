@@ -27,28 +27,24 @@
 
 declare(strict_types=1);
 
-namespace smacp\MachineTranslator;
+namespace smacp\MachineTranslator\Utils;
 
 /**
- * Interface MachineTranslator interface
+ * Class StringHelper
  *
- * @author Stuart MacPherson
+ * @package smacp\MachineTranslator\Utils
  */
-interface MachineTranslator
+class StringHelper
 {
     /**
-     * Translates a word or phrase
+     * Determines if a given string contains HTML.
      *
-     * @param string $word
-     * @param string $from
-     * @param string $to
-     */
-    public function translate(string $word, string $from, string $to);
-
-    /**
-     * Gets api provider name
+     * @param string $str
      *
-     * @return string
+     * @return bool
      */
-    public function getProvider(): string;
+    public static function containsHtml(string $str): bool
+    {
+        return $str !== strip_tags($str);
+    }
 }

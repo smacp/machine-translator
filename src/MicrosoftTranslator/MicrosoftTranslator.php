@@ -34,11 +34,12 @@ use GuzzleHttp\Exception\GuzzleException;
 use InvalidArgumentException;
 use Psr\Http\Message\ResponseInterface;
 use smacp\MachineTranslator\MachineTranslator;
+use smacp\MachineTranslator\Utils\StringHelper;
 
 /**
  * Class MicrosoftTranslator
  *
- * Provides API communication and methods for the Microsoft Translator API.
+ * Translate text via the Microsoft Translator API.
  *
  * @author Stuart MacPherson
  *
@@ -87,6 +88,105 @@ class MicrosoftTranslator implements MachineTranslator
     public const ASIA_BASE_URL = 'api-apc.cognitive.microsofttranslator.com';
 
     /**
+     * Array of Microsoft Translator locales that the API supports for translation.
+     *
+     * @var string[]
+     */
+    public const MICROSOFT_TRANSLATION_LOCALES = [
+        'af' => 'Afrikaans',
+        'am' => 'Amharic',
+        'ar' => 'Arabic',
+        'as' => 'Assamese',
+        'az' => 'Azerbaijani',
+        'bg' => 'Bulgarian',
+        'bn' => 'Bangla',
+        'bs' => 'Bosnian',
+        'ca' => 'Catalan',
+        'cs' => 'Czech',
+        'cy' => 'Welsh',
+        'da' => 'Danish',
+        'de' => 'German',
+        'el' => 'Greek',
+        'en' => 'English',
+        'es' => 'Spanish',
+        'et' => 'Estonian',
+        'fa' => 'Persian',
+        'fi' => 'Finnish',
+        'fil' => 'Filipino',
+        'fj' => 'Fijian',
+        'fr' => 'French',
+        'fr-CA' => 'French (Canada)',
+        'ga' => 'Irish',
+        'gu' => 'Gujarati',
+        'he' => 'Hebrew',
+        'hi' => 'Hindi',
+        'hr' => 'Croatian',
+        'ht' => 'Haitian Creole',
+        'hu' => 'Hungarian',
+        'hy' => 'Armenian',
+        'id' => 'Indonesian',
+        'is' => 'Icelandic',
+        'it' => 'Italian',
+        'iu' => 'Inuktitut',
+        'ja' => 'Japanese',
+        'kk' => 'Kazakh',
+        'km' => 'Khmer',
+        'kmr' => 'Kurdish (Northern)',
+        'kn' => 'Kannada',
+        'ko' => 'Korean',
+        'ku' => 'Kurdish (Central)',
+        'lo' => 'Lao',
+        'lt' => 'Lithuanian',
+        'lv' => 'Latvian',
+        'lzh' => 'Chinese (Literary)',
+        'mg' => 'Malagasy',
+        'mi' => 'Māori',
+        'ml' => 'Malayalam',
+        'mr' => 'Marathi',
+        'ms' => 'Malay',
+        'mt' => 'Maltese',
+        'mww' => 'Hmong Daw',
+        'my' => 'Myanmar (Burmese)',
+        'nb' => 'Norwegian',
+        'ne' => 'Nepali',
+        'nl' => 'Dutch',
+        'or' => 'Odia',
+        'otq' => 'Querétaro Otomi',
+        'pa' => 'Punjabi',
+        'pl' => 'Polish',
+        'prs' => 'Dari',
+        'ps' => 'Pashto',
+        'pt' => 'Portuguese (Brazil)',
+        'pt-PT' => 'Portuguese (Portugal)',
+        'ro' => 'Romanian',
+        'ru' => 'Russian',
+        'sk' => 'Slovak',
+        'sl' => 'Slovenian',
+        'sm' => 'Samoan',
+        'sq' => 'Albanian',
+        'sr-Cyrl' => 'Serbian (Cyrillic)',
+        'sr-Latn' => 'Serbian (Latin)',
+        'sv' => 'Swedish',
+        'sw' => 'Swahili',
+        'ta' => 'Tamil',
+        'te' => 'Telugu',
+        'th' => 'Thai',
+        'ti' => 'Tigrinya',
+        'tlh-Latn' => 'Klingon (Latin)',
+        'tlh-Piqd' => 'Klingon (pIqaD)',
+        'to' => 'Tongan',
+        'tr' => 'Turkish',
+        'ty' => 'Tahitian',
+        'uk' => 'Ukrainian',
+        'ur' => 'Urdu',
+        'vi' => 'Vietnamese',
+        'yua' => 'Yucatec Maya',
+        'yue' => 'Cantonese (Traditional)',
+        'zh-Hans' => 'Chinese Simplified',
+        'zh-Hant' => 'Chinese Traditional',
+    ];
+
+    /**
      * The Microsoft Translation subscription secret key.
      *
      * This value should be a valid secret key for the Translator API subscription NOT the subscription id itself.
@@ -112,6 +212,13 @@ class MicrosoftTranslator implements MachineTranslator
     private $region;
 
     /**
+     * The underlying Client instance used for API communication.
+     *
+     * @var Client
+     */
+    private $client;
+
+    /**
      * The Client response from the Microsoft translation API request.
      *
      * @var ResponseInterface|null
@@ -119,75 +226,32 @@ class MicrosoftTranslator implements MachineTranslator
     private $response;
 
     /**
-     * Array of Microsoft translator locales.
-     *
-     * @var string[]
-     */
-    private $locales = [
-        'ar'       => 'Arabic',
-        'bs-Latn'  => 'Bosnian (Latin)',
-        'bg'       => 'Bulgarian',
-        'ca'       => 'Catalan',
-        'zh-CHS'   => 'Chinese Simplified',
-        'zh-CHT'   => 'Chinese Traditional',
-        'hr'       => 'Croatian',
-        'cs'       => 'Czech',
-        'da'       => 'Danish',
-        'nl'       => 'Dutch',
-        'en'       => 'English',
-        'et'       => 'Estonian',
-        'fi'       => 'Finnish',
-        'fr'       => 'French',
-        'de'       => 'German',
-        'el'       => 'Greek',
-        'ht'       => 'Haitian Creole',
-        'he'       => 'Hebrew',
-        'hi'       => 'Hindi',
-        'mww'      => 'Hmong Daw',
-        'hu'       => 'Hungarian',
-        'id'       => 'Indonesian',
-        'it'       => 'Italian',
-        'ja'       => 'Japanese',
-        'sw'       => 'Kiswahili',
-        'tlh'      => 'Klingon',
-        'tlh-Qaak' => 'Klingon (pIqaD)',
-        'ko'       => 'Korean',
-        'lv'       => 'Latvian',
-        'lt'       => 'Lithuanian',
-        'ms'       => 'Malay',
-        'mt'       => 'Maltese',
-        'no'       => 'Norwegian',
-        'fa'       => 'Persian',
-        'pl'       => 'Polish',
-        'pt'       => 'Portuguese',
-        'otq'      => 'Querétaro Otomi',
-        'ro'       => 'Romanian',
-        'ru'       => 'Russian',
-        'sr-Cyrl'  => 'Serbian (Cyrillic)',
-        'sr-Latn'  => 'Serbian (Latin)',
-        'sk'       => 'Slovak',
-        'sl'       => 'Slovenian',
-        'es'       => 'Spanish',
-        'sv'       => 'Swedish',
-        'th'       => 'Thai',
-        'tr'       => 'Turkish',
-        'uk'       => 'Ukrainian',
-        'ur'       => 'Urdu',
-        'vi'       => 'Vietnamese',
-        'cy'       => 'Welsh',
-        'yua'      => 'Yucatec Maya',
-    ];
-
-    /**
      * Array of local locale code mappings to Microsoft Translator locales e.g.
      *
      * [
+     *     'es_LA' => 'es',
      *     'my_serbian_code' => 'sr-Cyrl',
      * ]
      *
      * @var string[]
      */
     private $localeMap = [];
+
+    /**
+     * Array of regular expression patterns to identify variable 'placeholders' in a string.
+     *
+     * A variable 'placeholder' is a string fragment that may be used in a word or phrase to perform
+     * string replacement e.g.
+     *
+     * - 'Hello %name%'
+     * - 'Hello {name}'
+     * - 'Hello {$name}'
+     *
+     * @var string[]
+     */
+    private $placeholderPatterns = [
+        '/%([^%\s]+)%/',
+    ];
 
     /**
      * MicrosoftTranslator Constructor
@@ -204,6 +268,7 @@ class MicrosoftTranslator implements MachineTranslator
         $this->subscriptionKey = $subscriptionKey;
         $this->region = $region;
         $this->baseUrl = $baseUrl;
+        $this->client = new Client();
     }
 
     /**
@@ -214,16 +279,6 @@ class MicrosoftTranslator implements MachineTranslator
     public function getProvider(): string
     {
         return self::PROVIDER;
-    }
-
-    /**
-     * Gets locales
-     *
-     * @return array
-     */
-    public function getLocales(): array
-    {
-        return $this->locales;
     }
 
     /**
@@ -251,7 +306,31 @@ class MicrosoftTranslator implements MachineTranslator
     }
 
     /**
-     * Attempts to normalise the given language code to a Microsoft translation code.
+     * Set client
+     *
+     * @param Client $client
+     *
+     * @return MicrosoftTranslator
+     */
+    public function setClient(Client $client): MicrosoftTranslator
+    {
+        $this->client = $client;
+
+        return $this;
+    }
+
+    /**
+     * Gets response.
+     *
+     * @return ResponseInterface|null
+     */
+    public function getResponse(): ?ResponseInterface
+    {
+        return $this->response;
+    }
+
+    /**
+     * Attempts to normalise the given language code to a Microsoft Translator language code.
      *
      * @param string $code
      *
@@ -259,30 +338,54 @@ class MicrosoftTranslator implements MachineTranslator
      */
     public function normaliseLanguageCode(string $code): string
     {
-        if (isset($this->locales[$code])) {
+        if (array_key_exists($code, self::MICROSOFT_TRANSLATION_LOCALES)) {
             return $code;
         }
 
-        $locales = array_keys($this->getLocales());
-
-        $localeMap = $this->localeMap;
-
-        if (count($localeMap) > 0) {
-            return $localeMap[$code] ?? '';
+        if ($this->localeMap) {
+            return $this->localeMap[$code] ?? '';
         }
 
         $code = str_replace('_', '-', strtolower($code));
         $find = ['-cn', '-tw'];
-        $replace = ['-chs', '-cht'];
+        $replace = ['-hans', '-hant'];
         $code = str_replace($find, $replace, $code);
 
-        foreach ($locales as $locale) {
+        foreach (array_keys(self::MICROSOFT_TRANSLATION_LOCALES) as $locale) {
             if ($code === strtolower($locale)) {
                 return $locale;
             }
         }
 
         return '';
+    }
+
+    /**
+     * Sets placeholder patterns.
+     *
+     * @param array $placeholderPatterns
+     *
+     * @return MicrosoftTranslator
+     */
+    public function setPlaceholderPatterns(array $placeholderPatterns): MicrosoftTranslator
+    {
+        $this->placeholderPatterns = $placeholderPatterns;
+
+        return $this;
+    }
+
+    /**
+     * Adds a placeholder pattern.
+     *
+     * @param string $placeholderPattern
+     *
+     * @return MicrosoftTranslator
+     */
+    public function addPlaceholderPattern(string $placeholderPattern): MicrosoftTranslator
+    {
+        $this->placeholderPatterns[] = $placeholderPattern;
+
+        return $this;
     }
 
     /**
@@ -329,7 +432,7 @@ class MicrosoftTranslator implements MachineTranslator
             $word = str_replace(array_keys($placeholders), array_values($placeholders), $word);
         }
 
-        $url = 'https://' . $this->baseUrl . '/translate';
+        $url = $this->createApiUrl('/translate');
 
         $queryParameters = [
             'api-version' => self::API_VERSION,
@@ -337,7 +440,7 @@ class MicrosoftTranslator implements MachineTranslator
             'to' => $to,
         ];
 
-        if ($this->containsHtml($word)) {
+        if (StringHelper::containsHtml($word)) {
             $queryParameters['textType'] = 'html';
         }
 
@@ -349,8 +452,7 @@ class MicrosoftTranslator implements MachineTranslator
             'body' => json_encode([['Text' => $word]]),
         ];
 
-        $client = new Client($config);
-        $this->response = $client->post($url);
+        $this->response = $this->client->post($url, $config);
         $contents = json_decode($this->response->getBody()->getContents(), true);
 
         $translated = $contents[0]['translations'][0]['text'];
@@ -376,7 +478,7 @@ class MicrosoftTranslator implements MachineTranslator
      */
     public function detectLanguage(string $str, bool $normaliseLocaleCode = false): string
     {
-        $url = 'https://' . $this->baseUrl . '/detect';
+        $url = $this->createApiUrl('/detect');
 
         $config = [
             'headers' => $this->getDefaultRequestHeaders(),
@@ -386,9 +488,7 @@ class MicrosoftTranslator implements MachineTranslator
             'body' => json_encode([['Text' => $str]]),
         ];
 
-        $client = new Client($config);
-
-        $this->response = $client->post($url);
+        $this->response = $this->client->post($url, $config);
         $contents = json_decode($this->response->getBody()->getContents(), true);
 
         $language = $contents[0]['language'];
@@ -404,54 +504,82 @@ class MicrosoftTranslator implements MachineTranslator
     }
 
     /**
-     * Gets response.
+     * Gets Microsoft Translator languages for the given translation scopes.
      *
-     * @return ResponseInterface|null
-     */
-    public function getResponse(): ?ResponseInterface
-    {
-        return $this->response;
-    }
-
-    /**
-     * Determines whether a string contains HTML tags.
+     * @link https://docs.microsoft.com/en-us/azure/cognitive-services/translator/reference/v3-0-languages
      *
-     * @param string $str
-     *
-     * @return bool
-     */
-    public function containsHtml(string $str): bool
-    {
-        return $str !== strip_tags($str);
-    }
-
-    /**
-     * Matches placeholders within a string.
-     *
-     * @param string $str
+     * @param string[] $scopes Array of scopes to get languages for e.g. translation, transliteration, dictionary.
      *
      * @return array
+     *
+     * @throws GuzzleException
+     */
+    public function getLanguages(array $scopes = ['translation']): array
+    {
+        $response = $this->client->get(
+            'https://' . self::GLOBAL_BASE_URL . '/languages?api-version=' . self::API_VERSION
+        );
+
+        $contents = json_decode($response->getBody()->getContents(), true);
+
+        $result = [];
+
+        foreach ($scopes as $scope) {
+            if (array_key_exists($scope, $contents)) {
+                $result[$scope] = $contents[$scope];
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Creates a Microsoft Translator API url.
+     *
+     * @param string $uri   The URI e.g. /translate
+     *
+     * @return string
+     */
+    private function createApiUrl(string $uri): string
+    {
+        return 'https://' . $this->baseUrl . $uri;
+    }
+
+    /**
+     * Gets placeholders that may be found within a string.
+     *
+     * @param string $str   The string to get the placeholders from
+     *
+     * @return string[]
      */
     private function getPlaceholders(string $str): array
     {
-        preg_match_all('/%([^%\s]+)%/', $str, $matches);
+        $placeholders = [];
 
-        return $matches[0] ??  [];
+        foreach ($this->placeholderPatterns as $placeholderPattern) {
+            preg_match_all($placeholderPattern, $str, $matches);
+
+            if (!empty($matches[0])) {
+                $placeholders = array_merge($placeholders, $matches[0]);
+            }
+        }
+
+        return $placeholders;
     }
 
     /**
-     * Creates array of placeholder keys and values
+     * Creates an array of placeholder keys for an array of placeholder strings
      *
-     * @param array $array
+     * @param array $placeholders  The array of placeholder strings to create the mapping for
      *
-     * @return array
+     * @return string[]
      */
-    private function createPlaceholdersMap($array): array
+    private function createPlaceholdersMap(array $placeholders): array
     {
         $result = [];
 
-        foreach ($array as $key => $val) {
-            $result[$val] = '[[' . ($key+1) . ']]';
+        foreach (array_values($placeholders) as $key => $value) {
+            $result[$value] = '[[' . ($key+1) . ']]';
         }
 
         return $result;
