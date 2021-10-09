@@ -31,6 +31,7 @@ use Exception;
 use Psr\Log\LoggerInterface;
 use smacp\MachineTranslator\Logger\Logger;
 use smacp\MachineTranslator\SimpleXmlExtended;
+use smacp\MachineTranslator\MachineTranslator;
 
 /**
  * Class XlfTranslator
