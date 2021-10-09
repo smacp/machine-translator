@@ -27,13 +27,13 @@
 
 declare(strict_types=1);
 
-namespace smacp\MachineTranslator\Classes\MicrosoftTranslator;
+namespace smacp\MachineTranslator\MicrosoftTranslator;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use InvalidArgumentException;
 use Psr\Http\Message\ResponseInterface;
-use smacp\MachineTranslator\Classes\MachineTranslator;
+use smacp\MachineTranslator\MachineTranslator;
 
 /**
  * Class MicrosoftTranslator
@@ -42,7 +42,7 @@ use smacp\MachineTranslator\Classes\MachineTranslator;
  *
  * @author Stuart MacPherson
  *
- * @package smacp\MachineTranslator\Classes\MicrosoftTranslator
+ * @package smacp\MachineTranslator\MicrosoftTranslator
  *
  * @link https://docs.microsoft.com/en-us/azure/cognitive-services/translator/
  */

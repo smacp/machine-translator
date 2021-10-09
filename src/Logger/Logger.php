@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace smacp\MachineTranslator\Classes\Logger;
+namespace smacp\MachineTranslator\Logger;
 
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
@@ -10,7 +10,7 @@ use Psr\Log\LogLevel;
 /**
  * Class Logger
  *
- * @package smacp\MachineTranslator\Classes\Logger
+ * @package smacp\MachineTranslator\Logger
  */
 class Logger implements LoggerInterface
 {

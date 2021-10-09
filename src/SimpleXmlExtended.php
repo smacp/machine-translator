@@ -25,28 +25,28 @@
  *
  */
 
-namespace smacp\MachineTranslator\Classes;
+namespace smacp\MachineTranslator;
+
+use SimpleXMLElement;
 
 /**
- * Interface MachineTranslator interface
- *
- * @author Stuart MacPherson
+ * This class extends SimpleXMLElement
  */
-interface MachineTranslator
+class SimpleXmlExtended extends SimpleXMLElement
 {
     /**
-     * Translates a word or phrase
+     * Writes a string to a node with 'CDATA' tags
      *
-     * @param string $word
-     * @param string $from
-     * @param string $to
+     * @param string $str
+     *
+     * @return SimpleXmlExtended
      */
-    public function translate(string $word, string $from, string $to);
+    public function addCData(string $str): SimpleXmlExtended
+    {
+        $node = dom_import_simplexml($this);
+        $oNode = $node->ownerDocument;
+        $node->appendChild($oNode->createCDATASection($str));
 
-    /**
-     * Gets api provider name
-     *
-     * @return string
-     */
-    public function getProvider(): string;
+        return $this;
+    }
 }

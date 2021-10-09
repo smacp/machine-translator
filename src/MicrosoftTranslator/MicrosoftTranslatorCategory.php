@@ -27,38 +27,25 @@
 
 declare(strict_types=1);
 
-namespace smacp\MachineTranslator\Tests\Classes;
+namespace smacp\MachineTranslator\MicrosoftTranslator;
 
-use PHPUnit\Framework\TestCase;
-use smacp\MachineTranslator\Classes\Logger\NullLogger;
-use smacp\MachineTranslator\Tests\testConfig;
-use smacp\MachineTranslator\Classes\MicrosoftTranslator\MicrosoftTranslator;
-use smacp\MachineTranslator\Classes\XlfTranslator;
-
-class XlfTranslatorTest extends TestCase
+/**
+ * Class MicrosoftTranslatorCategory
+ *
+ * @package smacp\MachineTranslator\MicrosoftTranslator
+ */
+class MicrosoftTranslatorCategory
 {
-    /** @var array */
-    protected $localeMap = [
-	    'ar_SY' => 'ar',
-        'ca_ES' => 'ca',
-        'cs_CZ' => 'cs',
-        'en_GB' => 'en',
-        'en_US' => 'en',
-        'es_ES' => 'es',
-        'he_HE' => 'he',
-        'zh_CN' => 'zh-CHS',
-        'zh_TW' => 'zh-CHT',
-    ];
+    /**
+     * The 'general' category.
+     *
+     * This category is currently the default for translations requests when a 'category' request
+     * parameter is not defined.
+     *
+     * @var string
+     */
+    public const GENERAL = 'general';
 
-    public function testTranslate()
-    {
-        $this->markTestIncomplete();
-
-        $translator = new MicrosoftTranslator(testConfig::MICROSOFT_KEY, testConfig::MICROSOFT_REGION);
-        $translator->setLocaleMap($this->localeMap);
-
-        $xlfTranslator = new XlfTranslator($translator, dirname(__FILE__) . '/../xlf/');
-        $xlfTranslator->setCommit(false);
-        $xlfTranslator->translate();
-    }
+    /** @var string */
+    public const TECHNOLOGY = 'tech';
 }

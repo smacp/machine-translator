@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace smacp\MachineTranslator\Classes\Logger;
+namespace smacp\MachineTranslator\Logger;
 
 use Psr\Log\LoggerInterface;
 
 /**
  * Class NullLogger
  *
- * @package smacp\MachineTranslator\Classes\Logger
+ * @package smacp\MachineTranslator\Logger
  */
 class NullLogger implements LoggerInterface
 {

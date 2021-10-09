@@ -25,28 +25,45 @@
  *
  */
 
-namespace smacp\MachineTranslator\Classes;
+declare(strict_types=1);
 
-use SimpleXMLElement;
+namespace smacp\MachineTranslator\Tests\XlfTranslator;
+
+use PHPUnit\Framework\TestCase;
+use smacp\MachineTranslator\Logger\NullLogger;
+use smacp\MachineTranslator\Tests\testConfig;
+use smacp\MachineTranslator\MicrosoftTranslator\MicrosoftTranslator;
+use smacp\MachineTranslator\XlfTranslator\XlfTranslator;
 
 /**
- * This class extends SimpleXMLElement
+ * Class XlfTranslatorTest
+ *
+ * @package smacp\MachineTranslator\Tests\XlfTranslator
  */
-class SimpleXmlExtended extends SimpleXMLElement
+class XlfTranslatorTest extends TestCase
 {
-    /**
-     * Writes a string to a node with 'CDATA' tags
-     *
-     * @param string $str
-     *
-     * @return SimpleXmlExtended
-     */
-    public function addCData(string $str): SimpleXmlExtended
-    {
-        $node = dom_import_simplexml($this);
-        $oNode = $node->ownerDocument;
-        $node->appendChild($oNode->createCDATASection($str));
+    /** @var array */
+    protected $localeMap = [
+	    'ar_SY' => 'ar',
+        'ca_ES' => 'ca',
+        'cs_CZ' => 'cs',
+        'en_GB' => 'en',
+        'en_US' => 'en',
+        'es_ES' => 'es',
+        'he_HE' => 'he',
+        'zh_CN' => 'zh-CHS',
+        'zh_TW' => 'zh-CHT',
+    ];
 
-        return $this;
+    public function testTranslate()
+    {
+        $this->markTestIncomplete();
+
+        $translator = new MicrosoftTranslator(testConfig::MICROSOFT_KEY, testConfig::MICROSOFT_REGION);
+        $translator->setLocaleMap($this->localeMap);
+
+        $xlfTranslator = new XlfTranslator($translator, dirname(__FILE__) . '/../xlf/');
+        $xlfTranslator->setCommit(false);
+        $xlfTranslator->translate();
     }
 }

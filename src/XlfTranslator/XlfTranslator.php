@@ -25,17 +25,21 @@
  *
  */
 
-namespace smacp\MachineTranslator\Classes;
+namespace smacp\MachineTranslator\XlfTranslator;
 
 use Exception;
 use Psr\Log\LoggerInterface;
-use smacp\MachineTranslator\Classes\Logger\Logger;
-use smacp\MachineTranslator\Classes\SimpleXmlExtended;
+use smacp\MachineTranslator\Logger\Logger;
+use smacp\MachineTranslator\SimpleXmlExtended;
 
 /**
- * Translates xlf files
+ * Class XlfTranslator
+ *
+ * Translates xlf files.
  *
  * @author Stuart MacPherson
+ *
+ * @package smacp\MachineTranslator\XlfTranslator
  */
 class XlfTranslator
 {

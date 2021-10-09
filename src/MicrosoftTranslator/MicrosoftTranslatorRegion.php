@@ -27,12 +27,12 @@
 
 declare(strict_types=1);
 
-namespace smacp\MachineTranslator\Classes\MicrosoftTranslator;
+namespace smacp\MachineTranslator\MicrosoftTranslator;
 
 /**
  * Class MicrosoftTranslatorRegion
  *
- * @package smacp\MachineTranslator\Classes\MicrosoftTranslator
+ * @package smacp\MachineTranslator\MicrosoftTranslator
  */
 class MicrosoftTranslatorRegion
 {
@@ -52,7 +52,7 @@ class MicrosoftTranslatorRegion
     public const CENTRAL_US = 'centralus';
 
     /** @var string */
-    public const CENTRAL_USE_UAP = 'centraluseuap';
+    public const CENTRAL_US_EUAP = 'centraluseuap';
 
     /** @var string */
     public const EAST_ASIA = 'eastasia';

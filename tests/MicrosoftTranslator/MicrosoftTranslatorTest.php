@@ -27,18 +27,18 @@
 
 declare(strict_types=1);
 
-namespace smacp\MachineTranslator\Tests\Classes;
+namespace smacp\MachineTranslator\Tests\MicrosoftTranslator;
 
 use Generator;
 use PHPUnit\Framework\TestCase;
-use smacp\MachineTranslator\Classes\MicrosoftTranslator\MicrosoftTranslatorCategory;
+use smacp\MachineTranslator\MicrosoftTranslator\MicrosoftTranslatorCategory;
 use smacp\MachineTranslator\Tests\testConfig;
-use smacp\MachineTranslator\Classes\MicrosoftTranslator\MicrosoftTranslator;
+use smacp\MachineTranslator\MicrosoftTranslator\MicrosoftTranslator;
 
 /**
  * Class MicrosoftTranslatorTest
  *
- * @package smacp\MachineTranslator\Tests\Classes
+ * @package smacp\MachineTranslator\Tests\MicrosoftTranslator
  */
 class MicrosoftTranslatorTest extends TestCase
 {

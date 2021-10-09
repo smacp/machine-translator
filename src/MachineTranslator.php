@@ -25,27 +25,28 @@
  *
  */
 
-declare(strict_types=1);
-
-namespace smacp\MachineTranslator\Classes\MicrosoftTranslator;
+namespace smacp\MachineTranslator;
 
 /**
- * Class MicrosoftTranslatorCategory
+ * Interface MachineTranslator interface
  *
- * @package smacp\MachineTranslator\Classes\MicrosoftTranslator
+ * @author Stuart MacPherson
  */
-class MicrosoftTranslatorCategory
+interface MachineTranslator
 {
     /**
-     * The 'general' category.
+     * Translates a word or phrase
      *
-     * This category is currently the default for translations requests when a 'category' request
-     * parameter is not defined.
-     *
-     * @var string
+     * @param string $word
+     * @param string $from
+     * @param string $to
      */
-    public const GENERAL = 'general';
+    public function translate(string $word, string $from, string $to);
 
-    /** @var string */
-    public const TECHNOLOGY = 'tech';
+    /**
+     * Gets api provider name
+     *
+     * @return string
+     */
+    public function getProvider(): string;
 }
