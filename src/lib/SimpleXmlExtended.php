@@ -27,28 +27,37 @@
 
 declare(strict_types=1);
 
-namespace smacp\MachineTranslator;
+namespace smacp\MachineTranslator\lib;
+
+use DOMDocument;
+use DOMElement;
+use SimpleXMLElement;
 
 /**
- * Interface MachineTranslator interface
+ * Class SimpleXmlExtended
  *
- * @author Stuart MacPherson
+ * @package smacp\MachineTranslator\lib
  */
-interface MachineTranslator
+class SimpleXmlExtended extends SimpleXMLElement
 {
     /**
-     * Translates a word or phrase
+     * Writes a string to a node with 'CDATA' tags.
      *
-     * @param string $word
-     * @param string $from
-     * @param string $to
+     * @param string $str
+     *
+     * @return SimpleXmlExtended
      */
-    public function translate(string $word, string $from, string $to);
+    public function addCData(string $str): SimpleXmlExtended
+    {
+        $node = dom_import_simplexml($this);
 
-    /**
-     * Gets api provider name
-     *
-     * @return string
-     */
-    public function getProvider(): string;
+        if ($node instanceof DOMElement) {
+            $ownerDocument = $node->ownerDocument;
+            if ($ownerDocument instanceof DOMDocument) {
+                $node->appendChild($ownerDocument->createCDATASection($str));
+            }
+        }
+
+        return $this;
+    }
 }

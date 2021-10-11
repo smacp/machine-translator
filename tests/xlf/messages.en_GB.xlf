@@ -7,8 +7,8 @@
     </header>
     <body>
       <trans-unit id="da39a3ee5e6b4b0d3255bfef95601890afd80709" resname="">
-        <source></source>
-        <target></target>
+        <source><![CDATA[<a href="#">Click here</a>]]></source>
+        <target><![CDATA[<a href="#">Click here</a>]]></target>
       </trans-unit>
       <trans-unit id="3fef4887200df8d43e9190633e361f6d8cfad1e7" resname="%s - password reset">
         <source>%s - password reset</source>

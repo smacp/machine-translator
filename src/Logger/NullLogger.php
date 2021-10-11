@@ -15,7 +15,7 @@ class NullLogger implements LoggerInterface
 {
     /**
      * @param string $message
-     * @param array  $context
+     * @param mixed[] $context
      */
     public function debug($message, array $context = []): void
     {
@@ -23,7 +23,7 @@ class NullLogger implements LoggerInterface
 
     /**
      * @param string $message
-     * @param array  $context
+     * @param mixed[] $context
      */
     public function critical($message, array $context = []): void
     {
@@ -32,7 +32,7 @@ class NullLogger implements LoggerInterface
     /**
      * @param mixed  $level
      * @param string $message
-     * @param array  $context
+     * @param mixed[] $context
      */
     public function log($level, $message, array $context = []): void
     {
@@ -40,7 +40,7 @@ class NullLogger implements LoggerInterface
 
     /**
      * @param string $message
-     * @param array  $context
+     * @param mixed[] $context
      */
     public function alert($message, array $context = []): void
     {
@@ -48,7 +48,7 @@ class NullLogger implements LoggerInterface
 
     /**
      * @param string $message
-     * @param array  $context
+     * @param mixed[] $context
      */
     public function warning($message, array $context = []): void
     {
@@ -56,7 +56,7 @@ class NullLogger implements LoggerInterface
 
     /**
      * @param string $message
-     * @param array  $context
+     * @param mixed[] $context
      */
     public function error($message, array $context = []): void
     {
@@ -64,7 +64,7 @@ class NullLogger implements LoggerInterface
 
     /**
      * @param string $message
-     * @param array  $context
+     * @param mixed[] $context
      */
     public function emergency($message, array $context = []): void
     {
@@ -72,7 +72,7 @@ class NullLogger implements LoggerInterface
 
     /**
      * @param string $message
-     * @param array  $context
+     * @param mixed[] $context
      */
     public function info($message, array $context = []): void
     {
@@ -80,7 +80,7 @@ class NullLogger implements LoggerInterface
 
     /**
      * @param string $message
-     * @param array  $context
+     * @param mixed[] $context
      */
     public function notice($message, array $context = []): void
     {

@@ -37,6 +37,9 @@ namespace smacp\MachineTranslator\MicrosoftTranslator;
 class MicrosoftTranslatorRegion
 {
     /** @var string */
+    public const GLOBAL = 'global';
+
+    /** @var string */
     public const AUSTRALIA_EAST = 'australiaeast';
 
     /** @var string */

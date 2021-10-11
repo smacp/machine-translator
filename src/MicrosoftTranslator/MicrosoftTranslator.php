@@ -33,8 +33,7 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use InvalidArgumentException;
 use Psr\Http\Message\ResponseInterface;
-use smacp\MachineTranslator\MachineTranslator;
-use smacp\MachineTranslator\Utils\StringHelper;
+use smacp\MachineTranslator\Interfaces\MachineTranslatorInterface;
 
 /**
  * Class MicrosoftTranslator
@@ -47,7 +46,7 @@ use smacp\MachineTranslator\Utils\StringHelper;
  *
  * @link https://docs.microsoft.com/en-us/azure/cognitive-services/translator/
  */
-class MicrosoftTranslator implements MachineTranslator
+class MicrosoftTranslator implements MachineTranslatorInterface
 {
     /** @var string */
     public const PROVIDER = 'Microsoft';
@@ -257,12 +256,12 @@ class MicrosoftTranslator implements MachineTranslator
      * MicrosoftTranslator Constructor
      *
      * @param string $subscriptionKey The Microsoft secret key for the Translator subscription
-     * @param string $region          The Microsoft Translator region
+     * @param string $region          The Microsoft Translator region e.g. global, northeurope
      * @param string $baseUrl         The Microsoft Translator base URL e.g. api.cognitive.microsofttranslator.com
      */
     public function __construct(
         string $subscriptionKey,
-        string $region,
+        string $region = MicrosoftTranslatorRegion::GLOBAL,
         string $baseUrl = self::GLOBAL_BASE_URL
     ) {
         $this->subscriptionKey = $subscriptionKey;
@@ -284,7 +283,7 @@ class MicrosoftTranslator implements MachineTranslator
     /**
      * Set localeMap
      *
-     * @param array $localeMap
+     * @param string[] $localeMap
      *
      * @return MicrosoftTranslator
      */
@@ -298,7 +297,7 @@ class MicrosoftTranslator implements MachineTranslator
 	/**
      * Get localeMap
      *
-     * @return array
+     * @return string[]
      */
     public function getLocaleMap(): array
     {
@@ -317,6 +316,16 @@ class MicrosoftTranslator implements MachineTranslator
         $this->client = $client;
 
         return $this;
+    }
+
+    /**
+     * Get client.
+     *
+     * @return Client
+     */
+    public function getClient(): Client
+    {
+        return $this->client;
     }
 
     /**
@@ -363,7 +372,7 @@ class MicrosoftTranslator implements MachineTranslator
     /**
      * Sets placeholder patterns.
      *
-     * @param array $placeholderPatterns
+     * @param string[] $placeholderPatterns
      *
      * @return MicrosoftTranslator
      */
@@ -372,6 +381,16 @@ class MicrosoftTranslator implements MachineTranslator
         $this->placeholderPatterns = $placeholderPatterns;
 
         return $this;
+    }
+
+    /**
+     * Get placeholder patterns.
+     *
+     * @return string[]
+     */
+    public function getPlaceholderPatterns(): array
+    {
+        return $this->placeholderPatterns;
     }
 
     /**
@@ -394,7 +413,7 @@ class MicrosoftTranslator implements MachineTranslator
      * @param string $word   The source string to translate
      * @param string $from   The locale code for the source string
      * @param string $to     The locale to translate into
-     * @param array $options Array of Optional Parameters for the translation request e.g. category, profanityAction etc
+     * @param mixed[] $options Array of Optional Parameters for the translation request e.g. category, profanityAction etc
      *
      * @return string
      *
@@ -405,7 +424,7 @@ class MicrosoftTranslator implements MachineTranslator
      */
     public function translate(string $word, string $from, string $to, array $options = []): string
     {
-        if (!$word) {
+        if (!trim($word)) {
             throw new InvalidArgumentException('No word was given for translation.');
         }
 
@@ -440,7 +459,7 @@ class MicrosoftTranslator implements MachineTranslator
             'to' => $to,
         ];
 
-        if (StringHelper::containsHtml($word)) {
+        if ($this->containsHtml($word)) {
             $queryParameters['textType'] = 'html';
         }
 
@@ -510,7 +529,7 @@ class MicrosoftTranslator implements MachineTranslator
      *
      * @param string[] $scopes Array of scopes to get languages for e.g. translation, transliteration, dictionary.
      *
-     * @return array
+     * @return array[]
      *
      * @throws GuzzleException
      */
@@ -570,7 +589,7 @@ class MicrosoftTranslator implements MachineTranslator
     /**
      * Creates an array of placeholder keys for an array of placeholder strings
      *
-     * @param array $placeholders  The array of placeholder strings to create the mapping for
+     * @param string[] $placeholders  The array of placeholder strings to create the mapping for
      *
      * @return string[]
      */
@@ -579,7 +598,7 @@ class MicrosoftTranslator implements MachineTranslator
         $result = [];
 
         foreach (array_values($placeholders) as $key => $value) {
-            $result[$value] = '[[' . ($key+1) . ']]';
+            $result[$value] =  '%' . ($key+1) . '%';
         }
 
         return $result;
@@ -597,5 +616,17 @@ class MicrosoftTranslator implements MachineTranslator
             'Ocp-Apim-Subscription-Region' => $this->region,
             'Ocp-Apim-Subscription-Key' => $this->subscriptionKey,
         ];
+    }
+
+    /**
+     * Determines if a given string contains HTML.
+     *
+     * @param string $str
+     *
+     * @return bool
+     */
+    private function containsHtml(string $str): bool
+    {
+        return $str !== strip_tags($str);
     }
 }

@@ -4,3 +4,4 @@ vendor
 nbproject/
 testConfig.php
 .env.test
+tests/coverage

@@ -29,15 +29,22 @@ namespace smacp\MachineTranslator\XlfTranslator;
 
 use Exception;
 use Psr\Log\LoggerInterface;
+use smacp\MachineTranslator\Interfaces\MachineTranslatorInterface;
+use smacp\MachineTranslator\lib\SimpleXmlExtended;
 use smacp\MachineTranslator\Logger\Logger;
-use smacp\MachineTranslator\SimpleXmlExtended;
-use smacp\MachineTranslator\MachineTranslator;
-use smacp\MachineTranslator\Utils\StringHelper;
 
 /**
  * Class XlfTranslator
  *
- * Translates xlf files.
+ * Translates xlf files in a given directory using a MachineTranslatorInterface instance. Xlf file names are
+ * expected in the format:
+ *
+ * domain.locale.xlf
+ *
+ * e.g.
+ *
+ * messages.de.xlf
+ * validators.de.xlf
  *
  * @author Stuart MacPherson
  *
@@ -48,88 +55,88 @@ class XlfTranslator
     /** @var string */
     private const XLIFF_FILE_EXTENSION = '.xlf';
 
-    /** @var MachineTranslator */
-    protected $translator;
+    /** @var MachineTranslatorInterface */
+    private $translator;
 
     /** @var LoggerInterface */
-    protected $logger;
+    private $logger;
 
     /**
      * The path to the source directory containing the Xlf files to translate.
      *
      * @var string
      */
-    protected $dir;
+    private $dir;
 
     /**
-     * Array of Xlf filepaths that have been processed.
+     * Array of Xlf file paths that have been processed.
      *
      * @var string[]
      */
-    protected $parsed;
+    private $parsed;
 
     /**
      * Whether to update Xlf files with translations.
      *
      * @var bool
      */
-    protected $commit = true;
+    private $commit = true;
 
     /**
      * Array of locales that should be translated.
      *
      * @var string[]
      */
-    protected $locales = [];
+    private $locales = [];
 
     /**
      * Array of locales that should be excluded.
      *
      * @var string[]
      */
-    protected $excludedLocales = ['en_GB', 'en_US'];
+    private $excludedLocales = ['en_GB', 'en_US'];
 
     /**
      * The source locale of the Xlf files.
      *
      * @var string
      */
-    protected $sourceLocale = 'en_GB';
+    private $sourceLocale = 'en_GB';
 
     /**
      * Array of catalogues that should be translated e.g. messages, validators etc.
      *
      * @var string[]
      */
-    protected $catalogues = [];
+    private $catalogues = [];
 
     /**
      * Whether to translate 'new' trans units only.
      *
      * @var bool
      */
-    protected $newOnly = false;
+    private $newOnly = false;
 
     /**
      * The number of machine translation requests that have failed.
      *
      * @var int
      */
-    protected $mtFailCount = 0;
+    private $mtFailCount = 0;
 
     /**
      * The maximum number of failed machine translation requests before the process should exit.
      *
      * @var integer
      */
-    protected $maxMtFailCount = 10;
+    private $maxMtFailCount = 10;
 
     /**
      * Custom Xlf trans-unit attributes used and written by the process.
      *
      * @var string[]
      */
-    protected $attributes = [
+    private $attributes = [
         'machineTranslated' => 'machinetranslated',
         'machineTranslatedDate' => 'datemachinetranslated'
     ];
@@ -139,17 +146,17 @@ class XlfTranslator
      *
      * @var bool
      */
-    protected $outputTranslated = false;
+    private $outputTranslated = false;
 
     /**
      * XlfTranslator constructor.
      *
-     * @param MachineTranslator $translator The MachineTranslator instance
-     * @param string            $dir        The source directory to translate Xlf files in
-     * @param LoggerInterface|null $logger  LoggerInterface instance to log process output
+     * @param MachineTranslatorInterface $translator The MachineTranslator instance
+     * @param string $dir                            The source directory to translate Xlf files in
+     * @param LoggerInterface|null $logger           LoggerInterface instance to log process output
      *
      */
-    public function __construct(MachineTranslator $translator, string $dir, ?LoggerInterface $logger = null)
+    public function __construct(MachineTranslatorInterface $translator, string $dir, ?LoggerInterface $logger = null)
     {
         $this->translator = $translator;
         $this->dir = $dir;
@@ -164,11 +171,11 @@ class XlfTranslator
     /**
      * Set translator
      *
-     * @param MachineTranslator $translator
+     * @param MachineTranslatorInterface $translator
      *
      * @return XlfTranslator
      */
-    public function setTranslator(MachineTranslator $translator): XlfTranslator
+    public function setTranslator(MachineTranslatorInterface $translator): XlfTranslator
     {
         $this->translator = $translator;
 
@@ -192,7 +199,7 @@ class XlfTranslator
     /**
      * Set locales
      *
-     * @param array $locales
+     * @param string[] $locales
      *
      * @return XlfTranslator
      */
@@ -206,7 +213,7 @@ class XlfTranslator
     /**
      * Set excludedLocales
      *
-     * @param array $locales
+     * @param string[] $locales
      *
      * @return XlfTranslator
      */
@@ -248,7 +255,7 @@ class XlfTranslator
     /**
      * Set catalogues
      *
-     * @param array $catalogues
+     * @param string[] $catalogues
      *
      * @return XlfTranslator
      */
@@ -368,9 +375,16 @@ class XlfTranslator
                     $this->logger->info('File: ' . $filename);
                     $this->logger->info('Catalogue: ' . $catalogue);
                     $this->logger->info('Locale: ' . $locale);
-                    $this->logger->info('MT locale: ' . $this->translator->normaliseLanguageCode($locale));
 
-                    $xlfData = new SimpleXMLExtended(file_get_contents($filePath));
+                    $fileContents = file_get_contents($filePath);
+
+                    if (!$fileContents) {
+                        $this->logger->info('Failed to load file contents for ' . $filePath);
+
+                        continue;
+                    }
+
+                    $xlfData = new SimpleXMLExtended($fileContents);
 
                     $new = [];
                     $i = 0;
@@ -412,12 +426,14 @@ class XlfTranslator
                                     $new[$i]['source'] = $source;
                                     $new[$i]['target'] = $translated;
 
+                                    /** @var SimpleXmlExtended $targetNode */
+                                    $targetNode = $transUnit->target;
                                     $mtAttr = $this->attributes['machineTranslated'];
                                     $mtDateAttr = $this->attributes['machineTranslatedDate'];
                                     $mtDate = date('Y-m-d H:i:s');
 
                                     if (!isset($attributes[$mtAttr])) {
-                                        $transUnit->addAttribute($mtAttr, 1);
+                                        $transUnit->addAttribute($mtAttr, '1');
                                     } else {
                                         $transUnit->attributes()->{$mtAttr} = 1;
                                     }
@@ -428,9 +444,9 @@ class XlfTranslator
                                         $transUnit->attributes()->{$mtDateAttr} = $mtDate;
                                     }
 
-                                    if (StringHelper::containsHtml($translated)) {
-                                        $transUnit->target = null;
-                                        $transUnit->target->addCData($translated);
+                                    if ($this->containsHtml($translated)) {
+                                        //$targetNode = null;
+                                        $targetNode->addCData($translated);
                                     } else {
                                         $transUnit->target = $translated;
                                     }
@@ -511,7 +527,7 @@ class XlfTranslator
      *
      * @return bool
      */
-    protected function shouldParseCatalogue(string $catalogue): bool
+    private function shouldParseCatalogue(string $catalogue): bool
     {
         if (count($this->catalogues) > 0 && !in_array($catalogue, $this->catalogues)) {
             return false;
@@ -527,12 +543,8 @@ class XlfTranslator
      *
      * @return bool
      */
-    protected function shouldParseLocale(string $locale): bool
+    private function shouldParseLocale(string $locale): bool
     {
-        if (!$this->translator->normaliseLanguageCode($locale)) {
-            return false;
-        }
-
         if ($this->locales && !in_array($locale, $this->locales)) {
             return false;
         }
@@ -550,14 +562,35 @@ class XlfTranslator
      * @param SimpleXMLExtended $xmlData
      * @param string $file
      *
-     * @return XlfTranslator
+     * @throws Exception
      */
-    protected function write(SimpleXMLExtended $xmlData, string $file): XlfTranslator
+    private function write(SimpleXMLExtended $xmlData, string $file): void
     {
         $fwh = fopen($file, 'w');
-        fwrite($fwh, $xmlData->asXML());
-        fclose($fwh);
 
-        return $this;
+        if (!$fwh) {
+            throw new Exception('Failed to create file resource.');
+        }
+
+        $data = $xmlData->asXML();
+
+        if (!$data) {
+            throw new Exception('Failed to generate file data from XML.');
+        }
+
+        fwrite($fwh, $data);
+        fclose($fwh);
+    }
+
+    /**
+     * Determines if a given string contains HTML.
+     *
+     * @param string $str
+     *
+     * @return bool
+     */
+    private function containsHtml(string $str): bool
+    {
+        return $str !== strip_tags($str);
     }
 }

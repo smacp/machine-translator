@@ -30,9 +30,15 @@ declare(strict_types=1);
 namespace smacp\MachineTranslator\Tests\MicrosoftTranslator;
 
 use Generator;
+use GuzzleHttp\Client;
+use http\Message\Body;
+use InvalidArgumentException;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use smacp\MachineTranslator\MicrosoftTranslator\MicrosoftTranslatorCategory;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\StreamInterface;
 use smacp\MachineTranslator\MicrosoftTranslator\MicrosoftTranslator;
+use smacp\MachineTranslator\MicrosoftTranslator\MicrosoftTranslatorCategory;
 
 /**
  * Class MicrosoftTranslatorTest
@@ -57,16 +63,61 @@ class MicrosoftTranslatorTest extends TestCase
     ];
 
     /**
-     * vendor/bin/phpunit --filter MicrosoftTranslatorTest::testSetLocaleMap
+     * vendor/bin/phpunit --filter MicrosoftTranslatorTest::testSettersAndGetters
      */
-    public function testSetLocaleMap()
+    public function testSettersAndGetters(): void
     {
         $translator = $this->getMicrosoftTranslatorInstance();
-        $translator->setLocaleMap($this->localeMap);
 
-        $localeMap = $translator->getLocaleMap();
+        $client = new Client();
+        $localeMap = [
+            'en-GB' => 'en',
+            'zh-TW' => 'zh-Hant',
+        ];
+        $placeholderPatterns = [
+            '/foo/',
+            '/bar/'
+        ];
 
-        $this->assertEquals($this->localeMap, $localeMap);
+        $translator->setClient($client)
+            ->setLocaleMap($localeMap)
+            ->setPlaceholderPatterns($placeholderPatterns);
+
+        $this->assertSame('Microsoft', $translator->getProvider());
+        $this->assertNull($translator->getResponse());
+        $this->assertSame($localeMap, $translator->getLocaleMap());
+        $this->assertSame($client, $translator->getClient());
+        $this->assertSame($placeholderPatterns, $translator->getPlaceholderPatterns());
+    }
+
+    /**
+     * vendor/bin/phpunit --filter MicrosoftTranslatorTest::testGetResponse
+     */
+    public function testGetResponse(): void
+    {
+        /** @var StreamInterface|MockObject $body */
+        $body = $this->createMock(StreamInterface::class);
+        $body->method('getContents')
+            ->willReturn(json_encode([['translations' => [['text' => 'Foo']]]]));
+
+        /** @var Client|MockObject $client */
+        $client = $this->createMock(Client::class);
+
+        /** @var ResponseInterface|MockObject $response */
+        $response = $this->createMock(ResponseInterface::class);
+
+        $response->method('getBody')
+            ->willReturn($body);
+
+        $client->method('post')
+            ->willReturn($response);
+
+        $translator = $this->getMicrosoftTranslatorInstance();
+        $translator->setClient($client);
+
+        $translator->translate('Foo', 'en', 'es');
+
+        $this->assertSame($response, $translator->getResponse());
     }
 
     /**
@@ -74,16 +125,15 @@ class MicrosoftTranslatorTest extends TestCase
      *
      * @dataProvider translateDataProvider
      *
+     * @param string $word
      * @param string $from
      * @param string $to
-     * @param string $word
      * @param array  $options
      * @param string $expected
      */
-    public function testTranslate(string $from, string $to, string $word, array $options, string $expected)
+    public function testTranslate(string $word, string $from, string $to, array $options, string $expected): void
     {
         $translator = $this->getMicrosoftTranslatorInstance();
-        $translator->setLocaleMap($this->localeMap);
 
         $result = $translator->translate($word, $from, $to, $options);
 
@@ -95,31 +145,194 @@ class MicrosoftTranslatorTest extends TestCase
      */
     public function translateDataProvider(): Generator
     {
-        yield 'en -> es' => ['en_GB', 'es_ES', 'Hello', [], 'Hola'];
-        yield 'en -> es' => ['en_GB', 'es_ES', 'Hello', ['category' => MicrosoftTranslatorCategory::TECHNOLOGY], 'Hola'];
-        yield 'en -> es HTML' => ['en_GB', 'es_ES', '<a href="#">Hello</a>', [],  '<a href="#">Hola</a>'];
+        yield 'en -> es' => ['Hello', 'en', 'es', [], 'Hola'];
+        yield 'en -> es' => ['Hello', 'en', 'es', ['category' => MicrosoftTranslatorCategory::TECHNOLOGY], 'Hola'];
+        yield 'en -> es HTML' => ['<a href="#">Hello</a>', 'en', 'es', [],  '<a href="#">Hola</a>'];
     }
 
     /**
-     * vendor/bin/phpunit --filter MicrosoftTranslatorTest::testTranslateRetainPlaceHolders
+     * vendor/bin/phpunit --filter MicrosoftTranslatorTest::testTranslateWithInvalidArguments
+     *
+     * @dataProvider translateWithInvalidArgumentsDataProvider
+     *
+     * @param string $word
+     * @param string $from
+     * @param string $to
+     * @param array  $options
+     * @param string $expected
      */
-    public function testTranslateRetainPlaceHolders()
+    public function testTranslateWithInvalidArguments(
+        string $word,
+        string $from,
+        string $to,
+        array $options,
+        string $expected
+    ): void {
+        $translator = $this->getMicrosoftTranslatorInstance();
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage($expected);
+
+        $translator->translate($word, $from, $to, $options);
+    }
+
+    /**
+     * @return Generator
+     */
+    public function translateWithInvalidArgumentsDataProvider(): Generator
     {
+        yield 'invalid word' => ['', 'foo', 'es', [], 'No word was given for translation.'];
+        yield 'invalid word' => [' ', 'foo', 'es', [], 'No word was given for translation.'];
+        yield 'invalid from' => ['Word', 'foo', 'es', [], 'No Microsoft locale code could be resolved for the from locale.'];
+        yield 'invalid to' => ['Word', 'en', 'foo', [], 'No Microsoft locale code could be resolved for the to locale.'];
+        yield 'from === to' => ['Word', 'es', 'es', [], 'Locales for from and to are the same.'];
+    }
+
+    /**
+     * vendor/bin/phpunit --filter MicrosoftTranslatorTest::testTranslateWithPlaceHolders
+     *
+     * @dataProvider translateWithPlaceholdersDataProvider
+     *
+     * @param string $word
+     * @param string $from
+     * @param string $to
+     * @param array  $options
+     * @param string $expected
+     */
+    public function testTranslateWithPlaceHolders(
+        string $word,
+        string $from,
+        string $to,
+        array $options,
+        string $expected
+    ): void {
+        $translator = $this->getMicrosoftTranslatorInstance();
+
+        $result = $translator->translate($word, $from, $to, $options);
+
+        $this->assertEquals($expected, $result);
+    }
+
+    /**
+     * @return Generator
+     */
+    public function translateWithPlaceholdersDataProvider(): Generator
+    {
+        yield 'en -> es' => ['Hello %name%', 'en', 'es', [], 'Hola %name%'];
+        yield 'en -> es HTML' => ['<a href="%url%">Hello %name%</a>', 'en', 'es', [], '<a href="%url%">Hola %name%</a>'];
+        yield 'en -> zh-Hans' => ['Hello %name%', 'en', 'zh-Hans', [], '您好 %name%'];
+    }
+
+    /**
+     * vendor/bin/phpunit --filter MicrosoftTranslatorTest::testTranslateWithLocaleMap
+     *
+     * @dataProvider translateWithLocaleMapDataProvider
+     *
+     * @param string $word
+     * @param string $from
+     * @param string $to
+     * @param array  $options
+     * @param string $expected
+     */
+    public function testTranslateWithLocaleMap(
+        string $word,
+        string $from,
+        string $to,
+        array $options,
+        string $expected
+    ): void {
         $translator = $this->getMicrosoftTranslatorInstance();
         $translator->setLocaleMap($this->localeMap);
 
-        $result = $translator->translate('Hello %name%', 'en_GB', 'es_ES');
+        $result = $translator->translate($word, $from, $to, $options);
 
-        $this->assertEquals('Hola %name%', $result);
+        $this->assertSame($expected, $result);
+    }
+
+    /**
+     * @return Generator
+     */
+    public function translateWithLocaleMapDataProvider(): Generator
+    {
+        yield 'en_GB > es_ES' => ['Hello', 'en_GB', 'es_ES', [], 'Hola'];
+        yield 'en_GB > ca_ES' => ['Hello', 'en_GB', 'ca_ES', [], 'Hola'];
+        yield 'en_GB > zh_TW' => ['Hello', 'en_GB', 'zh_TW', [], '你好'];
+        yield 'ca_ES > en_GB' => ['Hello', 'ca_ES', 'en_GB', [], 'Hello'];
+    }
+
+    /**
+     * vendor/bin/phpunit --filter MicrosoftTranslatorTest::testTranslateNormalisesChineseLanguageCodes
+     *
+     * @dataProvider translateNormalisesChineseLanguageCodesDataProvider
+     */
+    public function testTranslateNormalisesChineseLanguageCodes(
+        string $word,
+        string $from,
+        string $to,
+        array $options,
+        string $expected
+    ): void {
+        $translator = $this->getMicrosoftTranslatorInstance();
+
+        $result = $translator->translate($word, $from, $to, $options);
+
+        $this->assertSame($expected, $result);
+    }
+
+    /**
+     * @return Generator
+     */
+    public function translateNormalisesChineseLanguageCodesDataProvider(): Generator
+    {
+        yield 'zh-CN' => ['Hello', 'es', 'zh-CN', [], '你好'];
+        yield 'zh-TW' => ['Hello', 'es', 'zh-TW', [], '你好'];
+    }
+
+    /**
+     * vendor/bin/phpunit --filter MicrosoftTranslatorTest::testAddPlaceholderPattern
+     *
+     * @dataProvider addPlaceholderPatternDataProvider
+     *
+     * @param string $pattern
+     * @param string $word
+     * @param string $from
+     * @param string $to
+     * @param array  $options
+     * @param string $expected
+     */
+    public function testAddPlaceholderPattern(
+        string $pattern,
+        string $word,
+        string $from,
+        string $to,
+        array $options,
+        string $expected
+    ): void {
+        $translator = $this->getMicrosoftTranslatorInstance();
+        $translator->addPlaceholderPattern($pattern);
+
+        $result = $translator->translate($word, $from, $to, $options);
+
+        $this->assertEquals($expected, $result);
+    }
+
+    /**
+     * @return Generator
+     */
+    public function addPlaceholderPatternDataProvider(): Generator
+    {
+        yield 'en -> es #1' => ['/{(.*)?}/', 'Hello {name}', 'en', 'es', [], 'Hola {name}'];
+        yield 'en -> es #2' => ['/{(.*)?}/', 'Hello {Name}', 'en', 'es', [], 'Hola {Name}'];
+        yield 'en -> es #3' => ['/{(.*)?}/', 'Hello {$name}', 'en', 'es', [], 'Hola {$name}'];
+        yield 'en -> es #3' => ['/$(.*)?\s/', 'Hello $name, how are you?', 'en', 'es', [], 'Hola $name, ¿cómo estás?'];
     }
 
     /**
      * vendor/bin/phpunit --filter MicrosoftTranslatorTest::testDetectLanguage
      */
-    public function testDetectLanguage()
+    public function testDetectLanguage(): void
     {
         $translator = $this->getMicrosoftTranslatorInstance();
-        $translator->setLocaleMap($this->localeMap);
 
         $result = $translator->detectLanguage('Hola');
 
@@ -129,7 +342,7 @@ class MicrosoftTranslatorTest extends TestCase
     /**
      * vendor/bin/phpunit --filter MicrosoftTranslatorTest::testDetectLanguageReturnsMappedLocaleCodes
      */
-    public function testDetectLanguageReturnsMappedLocaleCodes()
+    public function testDetectLanguageReturnsMappedLocaleCodes(): void
     {
         $translator = $this->getMicrosoftTranslatorInstance();
         $translator->setLocaleMap($this->localeMap);
@@ -142,7 +355,7 @@ class MicrosoftTranslatorTest extends TestCase
     /**
      * vendor/bin/phpunit --filter MicrosoftTranslatorTest::testGetLanguages
      */
-    public function testGetLanguages()
+    public function testGetLanguages(): void
     {
         $translator = $this->getMicrosoftTranslatorInstance();
 
