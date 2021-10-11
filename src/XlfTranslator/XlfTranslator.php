@@ -445,7 +445,6 @@ class XlfTranslator
                                     }
 
                                     if ($this->containsHtml($translated)) {
-                                        //$targetNode = null;
                                         $targetNode->addCData($translated);
                                     } else {
                                         $transUnit->target = $translated;

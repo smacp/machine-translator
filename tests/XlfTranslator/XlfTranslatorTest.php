@@ -55,7 +55,10 @@ class XlfTranslatorTest extends TestCase
         'zh_TW' => 'zh-Hant',
     ];
 
-    public function testTranslate()
+    /**
+     * vendor/bin/phpunit --filter MicrosoftTranslatorTest::testTranslate
+     */
+    public function testTranslate(): void
     {
         $this->markTestIncomplete();
 
