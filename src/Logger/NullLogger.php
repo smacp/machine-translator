@@ -9,6 +9,8 @@ use Psr\Log\LoggerInterface;
 /**
  * Class NullLogger
  *
+ * @author Stuart MacPherson
+ *
  * @package smacp\MachineTranslator\Logger
  */
 class NullLogger implements LoggerInterface

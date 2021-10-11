@@ -32,6 +32,8 @@ namespace smacp\MachineTranslator\MicrosoftTranslator;
 /**
  * Class MicrosoftTranslatorRegion
  *
+ * @author Stuart MacPherson
+ *
  * @package smacp\MachineTranslator\MicrosoftTranslator
  */
 class MicrosoftTranslatorRegion

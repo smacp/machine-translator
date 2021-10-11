@@ -36,6 +36,8 @@ use SimpleXMLElement;
 /**
  * Class SimpleXmlExtended
  *
+ * @author Stuart MacPherson
+ *
  * @package smacp\MachineTranslator\lib
  */
 class SimpleXmlExtended extends SimpleXMLElement

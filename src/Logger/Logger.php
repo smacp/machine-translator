@@ -10,6 +10,8 @@ use Psr\Log\LogLevel;
 /**
  * Class Logger
  *
+ * @author Stuart MacPherson
+ *
  * @package smacp\MachineTranslator\Logger
  */
 class Logger implements LoggerInterface
