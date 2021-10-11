@@ -146,7 +146,7 @@ vendor/bin/phpunit
 Static code analysis can be executed via PHPStan:
 
 ```bash
-vendor/bin/phpstan analyze src --level 8
+vendor/bin/phpstan analyze src
 ```
 ## Todo
 
