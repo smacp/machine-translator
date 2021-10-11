@@ -21,11 +21,11 @@ Add the following to composer.json to install via composer:
     }
 ]
 ```
-A client key and secret is required to use Microsoft's Translation service API. Free or paid accounts can be created at [Microsoft Azure](https://azure.microsoft.com).
+An Azure subscription is required to use the Microsoft Translator service API. Free or paid accounts can be created at [Microsoft Azure](https://azure.microsoft.com).
 
 ## MicrosoftTranslator
 
-The MicrosoftTranslator requires a Microsoft Cognitive Services subscription key to access Microsoft's service. Example use for translating a string from English to Spanish:
+The MicrosoftTranslator requires a Microsoft Translator subscription secret key and region. Example use for translating a string from English to Spanish:
 
 ```php
 use smacp\MachineTranslator\MicrosoftTranslator\MicrosoftTranslator;
