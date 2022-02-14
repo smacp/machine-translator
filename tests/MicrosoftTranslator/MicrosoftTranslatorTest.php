@@ -367,33 +367,25 @@ class MicrosoftTranslatorTest extends TestCase
     }
 
     /**
-     * vendor/bin/phpunit --filter MicrosoftTranslatorTest::testConstructWithInvalidExcludedWordsFilePath
+     * vendor/bin/phpunit --filter MicrosoftTranslatorTest::testSetExcludedWordsFromFileWithInvalidFilePath
      */
-    public function testConstructWithInvalidExcludedWordsFilePath(): void
+    public function testSetExcludedWordsFromFileWithInvalidFilePath(): void
     {
         $this->expectException(FileNotFoundException::class);
 
-        new MicrosoftTranslator(
-            getenv('MICROSOFT_SUBSCRIPTION_KEY'),
-            getenv('MICROSOFT_SUBSCRIPTION_REGION'),
-            MicrosoftTranslator::GLOBAL_BASE_URL,
-            __DIR__ . '/Resources/DoesNotExist.json'
-        );
+        $translator = $this->getMicrosoftTranslatorInstance();
+        $translator->setExcludedWordsFromFile(__DIR__ . '/Resources/DoesNotExist.json');
     }
 
     /**
-     * vendor/bin/phpunit --filter MicrosoftTranslatorTest::testConstructWithInvalidExcludedWordsFileContent
+     * vendor/bin/phpunit --filter MicrosoftTranslatorTest::testSetExcludedWordsFromFileWithInvalidFileContent
      */
     public function testConstructWithInvalidExcludedWordsFileContent(): void
     {
         $this->expectException(JsonException::class);
 
-        new MicrosoftTranslator(
-            getenv('MICROSOFT_SUBSCRIPTION_KEY'),
-            getenv('MICROSOFT_SUBSCRIPTION_REGION'),
-            MicrosoftTranslator::GLOBAL_BASE_URL,
-            __DIR__ . '/Resources/invalidExcluded.json'
-        );
+        $translator = $this->getMicrosoftTranslatorInstance();
+        $translator->setExcludedWordsFromFile(__DIR__ . '/Resources/invalidExcluded.json');
     }
 
     /**
@@ -407,13 +399,8 @@ class MicrosoftTranslatorTest extends TestCase
         $client->expects($this->never())
             ->method('post');
 
-        $translator = new MicrosoftTranslator(
-            getenv('MICROSOFT_SUBSCRIPTION_KEY'),
-            getenv('MICROSOFT_SUBSCRIPTION_REGION'),
-            MicrosoftTranslator::GLOBAL_BASE_URL,
-            __DIR__ . '/Resources/excluded.json'
-        );
-
+        $translator = $this->getMicrosoftTranslatorInstance();
+        $translator->setExcludedWordsFromFile(__DIR__ . '/Resources/excluded.json');
         $translator->setClient($client);
 
         $word = 'This word or phrase is excluded';

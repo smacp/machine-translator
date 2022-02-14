@@ -79,8 +79,42 @@ $translated2 = $translator->translate('Hello $name, how are you?', 'en', 'es');
 // Hola $name, ¿cómo estás?
 ```
 
-XlfTranslator
-----
+#### Excluding words or phrases from machine translation
+
+Words or phrases can be excluded from being sent for machine translation. This can be achieved by either using a JSON 
+file containing an array or source strings or by setting an array of exclusions. When words or phrases are excluded 
+the translate method will return the excluded word or phrase e.g.
+
+Example using a PHP array:
+
+```php
+$translator->setExcludedWords([
+    'My excluded word or sentence'
+]);
+
+$translated = $translator->translate('My excluded word or sentence', 'en', 'es');
+
+// My excluded word or sentence
+```
+
+Example using a JSON file
+
+```json
+[
+  "My excluded word or sentence"
+]
+```
+
+```php
+$translator->setExcludedWordsFromFile('/home/me/myExcludedWords.json');
+
+$translated = $translator->translate('My excluded word or sentence', 'en', 'es');
+
+// My excluded word or sentence
+```
+
+## XlfTranslator
+
 The XlfTranslator machine translates xliff files found in a given directory. It machine translates files based on a 
 naming convention of catalogue.locale.xlf (e.g. 'messages.ca_ES.xlf'). Example use:
 
