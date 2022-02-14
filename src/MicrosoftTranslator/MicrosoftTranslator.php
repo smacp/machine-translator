@@ -32,7 +32,9 @@ namespace smacp\MachineTranslator\MicrosoftTranslator;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use InvalidArgumentException;
+use JsonException;
 use Psr\Http\Message\ResponseInterface;
+use smacp\MachineTranslator\Exception\FileNotFoundException;
 use smacp\MachineTranslator\Interfaces\MachineTranslatorInterface;
 
 /**
@@ -253,20 +255,46 @@ class MicrosoftTranslator implements MachineTranslatorInterface
     ];
 
     /**
+     * Array of words and or phrases to exclude from machine translation.
+     *
+     * e.g.
+     *
+     * [
+     *     'Facebook',
+     *     'LinkedIn',
+     *     'Some sentence I don't want machine translated',
+     *     'Some sentence with a %placeholder%',
+     * ]
+     *
+     * @var string[]
+     */
+    private $excludedWords = [];
+
+    /**
      * MicrosoftTranslator Constructor
      *
-     * @param string $subscriptionKey The Microsoft secret key for the Translator subscription
-     * @param string $region          The Microsoft Translator region e.g. global, northeurope
-     * @param string $baseUrl         The Microsoft Translator base URL e.g. api.cognitive.microsofttranslator.com
+     * @param string $subscriptionKey   The Microsoft secret key for the Translator subscription
+     * @param string $region            The Microsoft Translator region e.g. global, northeurope
+     * @param string $baseUrl           The Microsoft Translator base URL e.g. api.cognitive.microsofttranslator.com
+     * @param string $excludedWordsFile Path to the excluded words and phrases JSON dictionary file
+     *
+     * @throws FileNotFoundException
+     * @throws JsonException
      */
     public function __construct(
         string $subscriptionKey,
         string $region = MicrosoftTranslatorRegion::GLOBAL,
-        string $baseUrl = self::GLOBAL_BASE_URL
+        string $baseUrl = self::GLOBAL_BASE_URL,
+        string $excludedWordsFile = ''
     ) {
         $this->subscriptionKey = $subscriptionKey;
         $this->region = $region;
         $this->baseUrl = $baseUrl;
+
+        if ($excludedWordsFile) {
+            $this->setExcludedWordsFromFile($excludedWordsFile);
+        }
+
         $this->client = new Client();
     }
 
@@ -426,6 +454,10 @@ class MicrosoftTranslator implements MachineTranslatorInterface
     {
         if (!trim($word)) {
             throw new InvalidArgumentException('No word was given for translation.');
+        }
+
+        if ($this->excludedWords && in_array($word, $this->excludedWords)) {
+            return $word;
         }
 
         $from = $this->normaliseLanguageCode($from);
@@ -628,5 +660,30 @@ class MicrosoftTranslator implements MachineTranslatorInterface
     private function containsHtml(string $str): bool
     {
         return $str !== strip_tags($str);
+    }
+
+    /**
+     * Sets excluded words from a given file path.
+     *
+     * @param string $file  The path to the excluded words JSON file
+     *
+     * @throws FileNotFoundException
+     * @throws JsonException
+     */
+    private function setExcludedWordsFromFile(string $file): void
+    {
+        if (!is_file($file)) {
+            throw new FileNotFoundException('Excluded words JSON file not found.');
+        }
+
+        $contents = (string) file_get_contents($file);
+
+        $excludedWords = json_decode($contents, true);
+
+        if (!is_array($excludedWords)) {
+            throw new JsonException('Failed to parse excluded words JSON file to an array');
+        }
+
+        $this->excludedWords = $excludedWords;
     }
 }

@@ -81,7 +81,8 @@ $translated2 = $translator->translate('Hello $name, how are you?', 'en', 'es');
 
 XlfTranslator
 ----
-The XlfTranslator machine translates xliff files found in a given directory. It machine translates files based on a naming convention of catalogue.locale.xlf (e.g. 'messages.ca_ES.xlf'). Example use:
+The XlfTranslator machine translates xliff files found in a given directory. It machine translates files based on a 
+naming convention of catalogue.locale.xlf (e.g. 'messages.ca_ES.xlf'). Example use:
 
 ```php
 use smacp\MachineTranslator\MicrosoftTranslator\MicrosoftTranslator;
@@ -128,7 +129,8 @@ result in a HTTP 401 Unauthorized response e.g.
 
 ## Known issues
 
-Microsoft's free or paid plans for their Translation service are currently subject to word quotas and rate limits. When these constraints are applied to an individual account then the Microsoft service may not honour translation requests.
+Microsoft's free or paid plans for their Translation service are currently subject to word quotas and rate limits. When 
+these constraints are applied to an individual account then the Microsoft service may not honour translation requests.
 
 ## License
 
@@ -137,7 +139,7 @@ MIT
 ## Testing
 
 Copy .env.test.example to .env.test and set environment variables. Note this package runs integration level tests with 
-the Microsoft Translator API. Unit tests can be excuted by running:
+the Microsoft Translator API. Unit tests can be executed by running:
 
 ```bash
 vendor/bin/phpunit

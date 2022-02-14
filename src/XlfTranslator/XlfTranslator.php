@@ -27,8 +27,10 @@
 
 namespace smacp\MachineTranslator\XlfTranslator;
 
+use DateTime;
 use Exception;
 use Psr\Log\LoggerInterface;
+use SimpleXMLElement;
 use smacp\MachineTranslator\Interfaces\MachineTranslatorInterface;
 use smacp\MachineTranslator\lib\SimpleXmlExtended;
 use smacp\MachineTranslator\Logger\Logger;
@@ -67,13 +69,6 @@ class XlfTranslator
      * @var string
      */
     private $dir;
-
-    /**
-     * Array of Xlf file paths that have been processed.
-     *
-     * @var string[]
-     */
-    private $parsed;
 
     /**
      * Whether to update Xlf files with translations.
@@ -142,6 +137,13 @@ class XlfTranslator
     ];
 
     /**
+     * Whether to add machine translation attributes to a node during machine tranlsation.
+     *
+     * @var bool
+     */
+    private $addMachineTranslationAttributes = false;
+
+    /**
      * Whether to output translated strings to the log during the process.
      *
      * @var bool
@@ -156,8 +158,11 @@ class XlfTranslator
      * @param LoggerInterface|null $logger           LoggerInterface instance to log process output
      *
      */
-    public function __construct(MachineTranslatorInterface $translator, string $dir, ?LoggerInterface $logger = null)
-    {
+    public function __construct(
+        MachineTranslatorInterface $translator,
+        string $dir,
+        ?LoggerInterface $logger = null
+    ) {
         $this->translator = $translator;
         $this->dir = $dir;
 
@@ -309,6 +314,20 @@ class XlfTranslator
     }
 
     /**
+     * Set addMachineTranslationAttributes
+     *
+     * @param bool $addMachineTranslationAttributes
+     *
+     * @return XlfTranslator
+     */
+    public function setAddMachineTranslationAttributes(bool $addMachineTranslationAttributes): XlfTranslator
+    {
+        $this->addMachineTranslationAttributes = $addMachineTranslationAttributes;
+
+        return $this;
+    }
+
+    /**
      * Machine translates
      *
      * @return XlfTranslator
@@ -317,7 +336,6 @@ class XlfTranslator
      */
     public function translate(): XlfTranslator
     {
-        $this->parsed = [];
         $this->mtFailCount = 0;
 
         $provider = $this->translator->getProvider();
@@ -399,7 +417,6 @@ class XlfTranslator
                                 continue;
                             }
 
-                            $attributes = $transUnit->attributes();
                             $targetAttributes = $transUnit->target->attributes();
 
                             if ($this->newOnly === true &&
@@ -413,14 +430,13 @@ class XlfTranslator
                             $target = (string) $transUnit->target;
 
                             if ($source && $target) {
-                                if ($source !== $target) {
-                                    // target is already translated
+                                if (!$this->shouldTranslateString($source, $target)) {
                                     continue;
                                 }
 
-                                $strRequested++;
-
                                 $translated = $this->translator->translate($source, $this->sourceLocale, $locale);
+
+                                $strRequested++;
 
                                 if ($translated) {
                                     $new[$i]['source'] = $source;
@@ -428,26 +444,16 @@ class XlfTranslator
 
                                     /** @var SimpleXmlExtended $targetNode */
                                     $targetNode = $transUnit->target;
-                                    $mtAttr = $this->attributes['machineTranslated'];
-                                    $mtDateAttr = $this->attributes['machineTranslatedDate'];
-                                    $mtDate = date('Y-m-d H:i:s');
-
-                                    if (!isset($attributes[$mtAttr])) {
-                                        $transUnit->addAttribute($mtAttr, '1');
-                                    } else {
-                                        $transUnit->attributes()->{$mtAttr} = 1;
-                                    }
-
-                                    if (!isset($attributes[$mtDateAttr])) {
-                                        $transUnit->addAttribute($mtDateAttr, $mtDate);
-                                    } else {
-                                        $transUnit->attributes()->{$mtDateAttr} = $mtDate;
-                                    }
 
                                     if ($this->containsHtml($translated)) {
+                                        $transUnit->target = '';
                                         $targetNode->addCData($translated);
                                     } else {
                                         $transUnit->target = $translated;
+                                    }
+
+                                    if ($this->addMachineTranslationAttributes) {
+                                        $this->tagNodeWithMachineTranslatedAttributes($transUnit);
                                     }
 
                                     $i++;
@@ -487,8 +493,6 @@ class XlfTranslator
                         }
 
                         $localesTranslated[] = $locale;
-
-                        $this->parsed[] = $filename;
                     }
                 }
             }
@@ -591,5 +595,48 @@ class XlfTranslator
     private function containsHtml(string $str): bool
     {
         return $str !== strip_tags($str);
+    }
+
+    /**
+     * Determines if a given source string should be translated.
+     *
+     * @param string $source    The source string
+     * @param string $target    The current target string for the source
+     *
+     * @return bool
+     */
+    private function shouldTranslateString(string $source, string $target)
+    {
+        if ($source !== $target) {
+            // target is not same as source - assumed translated
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Tags the given node with machine translated attributes.
+     *
+     * @param SimpleXMLElement $transUnit  The trans unit node
+     */
+    private function tagNodeWithMachineTranslatedAttributes(SimpleXMLElement $transUnit): void
+    {
+        $mtAttr = $this->attributes['machineTranslated'];
+        $mtDateAttr = $this->attributes['machineTranslatedDate'];
+        $mtDate = (new DateTime())->format('c');
+        $attributes = $transUnit->attributes();
+
+        if (!isset($attributes[$mtAttr])) {
+            $transUnit->addAttribute($mtAttr, '1');
+        } else {
+            $transUnit->attributes()->{$mtAttr} = 1;
+        }
+
+        if (!isset($attributes[$mtDateAttr])) {
+            $transUnit->addAttribute($mtDateAttr, $mtDate);
+        } else {
+            $transUnit->attributes()->{$mtDateAttr} = $mtDate;
+        }
     }
 }

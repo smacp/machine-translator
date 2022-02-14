@@ -36,7 +36,7 @@ use smacp\MachineTranslator\XlfTranslator\XlfTranslator;
 /**
  * Class XlfTranslatorTest
  *
- * vendor/bin/phpunit --filter MicrosoftTranslatorTest
+ * vendor/bin/phpunit --filter XlfTranslatorTest
  *
  * @package smacp\MachineTranslator\Tests\XlfTranslator
  */
@@ -56,7 +56,7 @@ class XlfTranslatorTest extends TestCase
     ];
 
     /**
-     * vendor/bin/phpunit --filter MicrosoftTranslatorTest::testTranslate
+     * vendor/bin/phpunit --filter XlfTranslatorTest::testTranslate
      */
     public function testTranslate(): void
     {

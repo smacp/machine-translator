@@ -31,12 +31,13 @@ namespace smacp\MachineTranslator\Tests\MicrosoftTranslator;
 
 use Generator;
 use GuzzleHttp\Client;
-use http\Message\Body;
 use InvalidArgumentException;
+use JsonException;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
+use smacp\MachineTranslator\Exception\FileNotFoundException;
 use smacp\MachineTranslator\MicrosoftTranslator\MicrosoftTranslator;
 use smacp\MachineTranslator\MicrosoftTranslator\MicrosoftTranslatorCategory;
 
@@ -220,7 +221,7 @@ class MicrosoftTranslatorTest extends TestCase
     {
         yield 'en -> es' => ['Hello %name%', 'en', 'es', [], 'Hola %name%'];
         yield 'en -> es HTML' => ['<a href="%url%">Hello %name%</a>', 'en', 'es', [], '<a href="%url%">Hola %name%</a>'];
-        yield 'en -> zh-Hans' => ['Hello %name%', 'en', 'zh-Hans', [], '您好 %name%'];
+        yield 'en -> zh-Hans' => ['Hello %name%', 'en', 'zh-Hans', [], '你好 %name%'];
     }
 
     /**
@@ -366,10 +367,70 @@ class MicrosoftTranslatorTest extends TestCase
     }
 
     /**
+     * vendor/bin/phpunit --filter MicrosoftTranslatorTest::testConstructWithInvalidExcludedWordsFilePath
+     */
+    public function testConstructWithInvalidExcludedWordsFilePath(): void
+    {
+        $this->expectException(FileNotFoundException::class);
+
+        new MicrosoftTranslator(
+            getenv('MICROSOFT_SUBSCRIPTION_KEY'),
+            getenv('MICROSOFT_SUBSCRIPTION_REGION'),
+            MicrosoftTranslator::GLOBAL_BASE_URL,
+            __DIR__ . '/Resources/DoesNotExist.json'
+        );
+    }
+
+    /**
+     * vendor/bin/phpunit --filter MicrosoftTranslatorTest::testConstructWithInvalidExcludedWordsFileContent
+     */
+    public function testConstructWithInvalidExcludedWordsFileContent(): void
+    {
+        $this->expectException(JsonException::class);
+
+        new MicrosoftTranslator(
+            getenv('MICROSOFT_SUBSCRIPTION_KEY'),
+            getenv('MICROSOFT_SUBSCRIPTION_REGION'),
+            MicrosoftTranslator::GLOBAL_BASE_URL,
+            __DIR__ . '/Resources/invalidExcluded.json'
+        );
+    }
+
+    /**
+     * vendor/bin/phpunit --filter MicrosoftTranslatorTest::testTranslateExcludesWords
+     */
+    public function testTranslateExcludesWords(): void
+    {
+        /** @var Client|MockObject $client */
+        $client = $this->createMock(Client::class);
+
+        $client->expects($this->never())
+            ->method('post');
+
+        $translator = new MicrosoftTranslator(
+            getenv('MICROSOFT_SUBSCRIPTION_KEY'),
+            getenv('MICROSOFT_SUBSCRIPTION_REGION'),
+            MicrosoftTranslator::GLOBAL_BASE_URL,
+            __DIR__ . '/Resources/excluded.json'
+        );
+
+        $translator->setClient($client);
+
+        $word = 'This word or phrase is excluded';
+
+        $result = $translator->translate($word, 'en', 'es');
+
+        $this->assertSame($word, $result);
+    }
+
+    /**
      * @return MicrosoftTranslator
      */
     private function getMicrosoftTranslatorInstance(): MicrosoftTranslator
     {
-        return new MicrosoftTranslator(getenv('MICROSOFT_SUBSCRIPTION_KEY'), getenv('MICROSOFT_SUBSCRIPTION_REGION'));
+        return new MicrosoftTranslator(
+            getenv('MICROSOFT_SUBSCRIPTION_KEY'),
+            getenv('MICROSOFT_SUBSCRIPTION_REGION')
+        );
     }
 }
