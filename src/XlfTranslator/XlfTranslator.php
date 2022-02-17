@@ -113,13 +113,6 @@ class XlfTranslator
     private $newOnly = false;
 
     /**
-     * The number of machine translation requests that have failed.
-     *
-     * @var int
-     */
-    private $mtFailCount = 0;
-
-    /**
      * The maximum number of failed machine translation requests before the process should exit.
      *
      * @var integer
@@ -137,7 +130,7 @@ class XlfTranslator
     ];
 
     /**
-     * Whether to add machine translation attributes to a node during machine tranlsation.
+     * Whether to add machine translation attributes to a node during machine translation.
      *
      * @var bool
      */
@@ -336,8 +329,6 @@ class XlfTranslator
      */
     public function translate(): XlfTranslator
     {
-        $this->mtFailCount = 0;
-
         $provider = $this->translator->getProvider();
         $cataloguesTranslated = [];
         $cataloguesSkipped = [];
@@ -346,6 +337,7 @@ class XlfTranslator
         $strRequested = 0;
         $strTranslated = 0;
         $filesWritten = 0;
+        $mtFailCount = 0;
 
         $this->logger->info('-----------------------------------------');
         $this->logger->info('XlfTranslator');
@@ -406,13 +398,13 @@ class XlfTranslator
 
                     $new = [];
                     $i = 0;
-                    $this->mtFailCount = 0;
+                    $mtFailCount = 0;
 
                     foreach ($xlfData->file->body as $element) {
                         $xlfStrTranslated = 0;
 
                         foreach ($element as $transUnit) {
-                            if ($this->mtFailCount >= $this->maxMtFailCount) {
+                            if ($mtFailCount >= $this->maxMtFailCount) {
                                 // skip to the end as we may have hit the rate limit
                                 continue;
                             }
@@ -460,7 +452,7 @@ class XlfTranslator
                                     $xlfStrTranslated++;
                                     $strTranslated++;
                                 } else {
-                                    $this->mtFailCount++;
+                                    $mtFailCount++;
                                 }
                             }
                         }
@@ -605,7 +597,7 @@ class XlfTranslator
      *
      * @return bool
      */
-    private function shouldTranslateString(string $source, string $target)
+    private function shouldTranslateString(string $source, string $target): bool
     {
         if ($source !== $target) {
             // target is not same as source - assumed translated

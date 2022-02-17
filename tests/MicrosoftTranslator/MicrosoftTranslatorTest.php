@@ -46,6 +46,10 @@ use smacp\MachineTranslator\MicrosoftTranslator\MicrosoftTranslatorCategory;
  *
  * vendor/bin/phpunit --filter MicrosoftTranslatorTest
  *
+ * This test case executes integration level tests to the Microsoft Translator API. Please ensure
+ * you have created a .env.test file and set values for the Microsoft Translator environment
+ * variables.
+ *
  * @package smacp\MachineTranslator\Tests\MicrosoftTranslator
  */
 class MicrosoftTranslatorTest extends TestCase
@@ -411,13 +415,151 @@ class MicrosoftTranslatorTest extends TestCase
     }
 
     /**
+     * vendor/bin/phpunit --filter MicrosoftTranslatorTest::testTranslateWithDefaultTranslateOptions
+     */
+    public function testTranslateWithDefaultTranslateOptions(): void
+    {
+        $expectedUrl = 'https://' . MicrosoftTranslator::GLOBAL_BASE_URL . '/translate';
+        $expectedConfig = [
+            'headers' => [
+                'Content-Type' => 'application/json',
+                'Ocp-Apim-Subscription-Region' => $this->getTestMicrosoftTranslatorSubscriptionRegion(),
+                'Ocp-Apim-Subscription-Key'=> $this->getTestMicrosoftTranslatorSubscriptionKey(),
+            ],
+            'query' => [
+                'api-version' => MicrosoftTranslator::API_VERSION,
+                'from' => 'en',
+                'to' => 'es',
+                'category' => 'fooTech',
+                'someOtherOption' => 'fooOtherOption',
+            ],
+            'body' => '[{"Text":"Hello"}]',
+        ];
+
+        $body = $this->createMock(StreamInterface::class);
+        $body->method('getContents')
+            ->willReturn(json_encode([['translations' => [['text' => 'Hola']]]]));
+
+        /** @var ResponseInterface|MockObject $response */
+        $response = $this->createMock(ResponseInterface::class);
+
+        $response->method('getBody')
+            ->willReturn($body);
+
+        /** @var Client|MockObject $client */
+        $client = $this->createMock(Client::class);
+
+        $client->expects($this->once())
+            ->method('post')
+            ->with(
+                $expectedUrl,
+                $expectedConfig
+            )
+            ->willReturn($response);
+
+        $translator = $this->getMicrosoftTranslatorInstance();
+        $translator->setClient($client);
+        $translator->setDefaultTranslateOptions([
+            'category' => 'fooTech',
+            'someOtherOption' => 'fooOtherOption',
+        ]);
+
+        $result = $translator->translate('Hello', 'en', 'es');
+
+        $this->assertSame('Hola', $result);
+    }
+
+    /**
+     * vendor/bin/phpunit --filter MicrosoftTranslatorTest::testTranslateWithDefaultTranslateOptionsAndOptionsAsArguments
+     */
+    public function testTranslateWithDefaultTranslateOptionsAndOptionsAsArguments(): void
+    {
+        $expectedUrl = 'https://' . MicrosoftTranslator::GLOBAL_BASE_URL . '/translate';
+        $expectedConfig = [
+            'headers' => [
+                'Content-Type' => 'application/json',
+                'Ocp-Apim-Subscription-Region' => $this->getTestMicrosoftTranslatorSubscriptionRegion(),
+                'Ocp-Apim-Subscription-Key'=> $this->getTestMicrosoftTranslatorSubscriptionKey(),
+            ],
+            'query' => [
+                'api-version' => MicrosoftTranslator::API_VERSION,
+                'from' => 'en',
+                'to' => 'es',
+                'category' => 'overriddenFooTech',
+                'someOtherOption' => 'overriddenFooOtherOption',
+            ],
+            'body' => '[{"Text":"Hello"}]',
+        ];
+
+        $body = $this->createMock(StreamInterface::class);
+        $body->method('getContents')
+            ->willReturn(json_encode([['translations' => [['text' => 'Hola']]]]));
+
+        /** @var ResponseInterface|MockObject $response */
+        $response = $this->createMock(ResponseInterface::class);
+
+        $response->method('getBody')
+            ->willReturn($body);
+
+        /** @var Client|MockObject $client */
+        $client = $this->createMock(Client::class);
+
+        $client->expects($this->once())
+            ->method('post')
+            ->with(
+                $expectedUrl,
+                $expectedConfig
+            )
+            ->willReturn($response);
+
+        $translator = $this->getMicrosoftTranslatorInstance();
+        $translator->setClient($client);
+        $translator->setDefaultTranslateOptions([
+            'category' => 'fooTech',
+            'someOtherOption' => 'fooOtherOption',
+        ]);
+
+        $result = $translator->translate(
+            'Hello',
+            'en',
+            'es',
+            [
+                'category' => 'overriddenFooTech',
+                'someOtherOption' => 'overriddenFooOtherOption',
+            ]
+        );
+
+        $this->assertSame('Hola', $result);
+    }
+
+    /**
      * @return MicrosoftTranslator
      */
     private function getMicrosoftTranslatorInstance(): MicrosoftTranslator
     {
         return new MicrosoftTranslator(
-            getenv('MICROSOFT_SUBSCRIPTION_KEY'),
-            getenv('MICROSOFT_SUBSCRIPTION_REGION')
+            $this->getTestMicrosoftTranslatorSubscriptionKey(),
+            $this->getTestMicrosoftTranslatorSubscriptionRegion()
         );
+    }
+
+    /**
+     * Gets the test environment Microsoft Translator subscription key.
+     *
+     * @return string
+     */
+    private function getTestMicrosoftTranslatorSubscriptionKey(): string
+    {
+        return getenv('MICROSOFT_SUBSCRIPTION_KEY');
+    }
+
+    /**
+     * Gets the test environment Microsoft Translator subscription region.
+     *
+     * @return string
+     */
+    private function getTestMicrosoftTranslatorSubscriptionRegion(): string
+    {
+        return getenv('MICROSOFT_SUBSCRIPTION_REGION');
     }
 }

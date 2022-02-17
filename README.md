@@ -1,7 +1,7 @@
 # MachineTranslator
-MachineTranslator is a PHP component that uses the Microsoft Translator API service to translate strings from one language to another. 
-It is also able to machine translate xliff (.xlf) files. It currently supports the Microsoft service but other api providers 
-may also be implemented in future (e.g. Google Translate).
+MachineTranslator is a PHP component that uses the Microsoft Translator API service to translate strings from one 
+language to another. It is also able to machine translate xliff (.xlf) files. It currently supports the 
+Microsoft service but other api providers may also be implemented in future (e.g. Google Translate).
 
 ## Dependencies
 
@@ -21,11 +21,15 @@ Add the following to composer.json to install via composer:
     }
 ]
 ```
-An Azure subscription is required to use the Microsoft Translator service API. Free or paid accounts can be created at [Microsoft Azure](https://azure.microsoft.com).
+An Azure subscription is required to use the Microsoft Translator service API. Free or paid accounts can be created 
+at [Microsoft Azure](https://azure.microsoft.com).
 
 ## MicrosoftTranslator
+The MicrosoftTranslator will translate a word or phrase from one language to another using the Microsoft Translator 
+service API. The MicrosoftTranslator currently supports v3 of the Microsoft Translate API and requires a 
+Microsoft Translator subscription secret key and region in order to authenticate with the service. 
 
-The MicrosoftTranslator requires a Microsoft Translator subscription secret key and region. Example use for translating a string from English to Spanish:
+Example use for translating a string from English to Spanish:
 
 ```php
 use smacp\MachineTranslator\MicrosoftTranslator\MicrosoftTranslator;
@@ -83,7 +87,7 @@ $translated2 = $translator->translate('Hello $name, how are you?', 'en', 'es');
 
 Words or phrases can be excluded from being sent for machine translation. This can be achieved by either using a JSON 
 file containing an array or source strings or by setting an array of exclusions. When words or phrases are excluded 
-the translate method will return the excluded word or phrase e.g.
+then the translate method will return the excluded word or phrase e.g.
 
 Example using a PHP array:
 
@@ -113,6 +117,31 @@ $translated = $translator->translate('My excluded word or sentence', 'en', 'es')
 // My excluded word or sentence
 ```
 
+#### Using options for machine translation
+
+Microsoft Translator API options can be passed to the translate request such as translation 'category'. 
+
+This can be done by either setting translate options as defaults for all translate requests:
+
+```yaml
+$translator->setDefaultTranslateOptions([
+    'category' => MicrosoftTranslatorCategory::TECHNOLOGY,
+]);
+```
+
+Or by passing an array of options to the MicrosoftTranslator::translate method:
+
+```yaml
+$translator->translate(
+  'Some technology word', 
+  'en', 
+  'es', 
+  [
+    'category' => MicrosoftTranslatorCategory::TECHNOLOGY,
+  ]
+]);
+```
+
 ## XlfTranslator
 
 The XlfTranslator machine translates xliff files found in a given directory. It machine translates files based on a 
@@ -140,6 +169,7 @@ $translator->setLocaleMap([
 $xlfTranslator = new XlfTranslator($translator, '/home/me/xlf/');
 $xlfTranslator->translate();
 ```
+
 ## Troubleshooting
 
 ### Microsoft Translator API authentication

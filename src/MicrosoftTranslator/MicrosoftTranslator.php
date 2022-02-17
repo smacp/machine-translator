@@ -35,6 +35,7 @@ use InvalidArgumentException;
 use JsonException;
 use Psr\Http\Message\ResponseInterface;
 use smacp\MachineTranslator\Exception\FileNotFoundException;
+use smacp\MachineTranslator\Exception\TranslationException;
 use smacp\MachineTranslator\Interfaces\MachineTranslatorInterface;
 
 /**
@@ -44,9 +45,9 @@ use smacp\MachineTranslator\Interfaces\MachineTranslatorInterface;
  *
  * @author Stuart MacPherson
  *
- * @package smacp\MachineTranslator\MicrosoftTranslator
- *
  * @link https://docs.microsoft.com/en-us/azure/cognitive-services/translator/
+ *
+ * @package smacp\MachineTranslator\MicrosoftTranslator
  */
 class MicrosoftTranslator implements MachineTranslatorInterface
 {
@@ -271,6 +272,21 @@ class MicrosoftTranslator implements MachineTranslatorInterface
     private $excludedWords = [];
 
     /**
+     * Array of default options for the Microsoft Translator 'translate' request.
+     *
+     * e.g.
+     *
+     * [
+     *     'category' => 'tech',
+     * ]
+     *
+     * @link https://docs.microsoft.com/en-us/azure/cognitive-services/translator/reference/v3-0-translate
+     *
+     * @var array
+     */
+    private $defaultTranslateOptions = [];
+
+    /**
      * MicrosoftTranslator Constructor
      *
      * @param string $subscriptionKey   The Microsoft secret key for the Translator subscription
@@ -288,7 +304,7 @@ class MicrosoftTranslator implements MachineTranslatorInterface
         $this->subscriptionKey = $subscriptionKey;
         $this->region = $region;
         $this->baseUrl = $baseUrl;
-        
+
         $this->client = new Client();
     }
 
@@ -442,6 +458,20 @@ class MicrosoftTranslator implements MachineTranslatorInterface
     }
 
     /**
+     * Sets default options for the translate request.
+     *
+     * @param array $options
+     *
+     * @return $this
+     */
+    public function setDefaultTranslateOptions(array $options): MicrosoftTranslator
+    {
+        $this->defaultTranslateOptions = $options;
+
+        return $this;
+    }
+
+    /**
      * Sets excluded words from a given file JSON path.
      *
      * The JSON file should contain an array of source strings in any locale that should not be
@@ -491,8 +521,9 @@ class MicrosoftTranslator implements MachineTranslatorInterface
      *
      * @link https://docs.microsoft.com/en-us/azure/cognitive-services/translator/reference/v3-0-translate
      *
-     * @throws GuzzleException
-     * @throws InvalidArgumentException
+     * @throws GuzzleException          Thrown when the Client request to the translate API fails
+     * @throws InvalidArgumentException Thrown when method arguments are invalid
+     * @throws TranslationException     Thrown when a translation is not found within the translate API response
      */
     public function translate(string $word, string $from, string $to, array $options = []): string
     {
@@ -529,6 +560,8 @@ class MicrosoftTranslator implements MachineTranslatorInterface
 
         $url = $this->createApiUrl('/translate');
 
+        $options = array_merge($this->defaultTranslateOptions, $options);
+
         $queryParameters = [
             'api-version' => self::API_VERSION,
             'from' => $from,
@@ -550,13 +583,17 @@ class MicrosoftTranslator implements MachineTranslatorInterface
         $this->response = $this->client->post($url, $config);
         $contents = json_decode($this->response->getBody()->getContents(), true);
 
+        if (!$contents || empty($contents[0]['translations'][0]['text'])) {
+            throw new TranslationException('Failed to find an expected translation within the API response.');
+        }
+
         $translated = $contents[0]['translations'][0]['text'];
 
         if ($placeholders) {
             $translated = str_replace(array_values($placeholders), array_keys($placeholders), $translated);
         }
 
-        return $translated;
+        return (string) $translated;
     }
 
     /**
@@ -697,7 +734,7 @@ class MicrosoftTranslator implements MachineTranslatorInterface
     /**
      * Determines if a given string contains HTML.
      *
-     * @param string $str
+     * @param string $str   The string to check
      *
      * @return bool
      */
