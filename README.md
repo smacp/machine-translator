@@ -38,7 +38,8 @@ $translator = new MicrosoftTranslator($myMsTranslatorSecretKey, $myMsTranslatorR
 $translated = $translator->translate('Hello %name%', 'en', 'es');
 ```
 
-It is also possible to detect the language of a given string
+It is also possible to detect the language of a given string:
+
 ```php
 $detected = $translator->detectLanguage('Hola');
 ```
@@ -101,7 +102,7 @@ $translated = $translator->translate('My excluded word or sentence', 'en', 'es')
 // My excluded word or sentence
 ```
 
-Example using a JSON file
+Example using a JSON file:
 
 ```json
 [
