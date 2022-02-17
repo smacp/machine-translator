@@ -523,7 +523,7 @@ class MicrosoftTranslator implements MachineTranslatorInterface
      *
      * @throws GuzzleException          Thrown when the Client request to the translate API fails
      * @throws InvalidArgumentException Thrown when method arguments are invalid
-     * @throws TranslationException     Thrown when a translation is not found within the translate API response
+     * @throws TranslationException     Thrown when the translate API response cannot be parsed
      */
     public function translate(string $word, string $from, string $to, array $options = []): string
     {
@@ -583,8 +583,8 @@ class MicrosoftTranslator implements MachineTranslatorInterface
         $this->response = $this->client->post($url, $config);
         $contents = json_decode($this->response->getBody()->getContents(), true);
 
-        if (!$contents || empty($contents[0]['translations'][0]['text'])) {
-            throw new TranslationException('Failed to find an expected translation within the API response.');
+        if (!$contents || !isset($contents[0]['translations'][0]['text'])) {
+            throw new TranslationException('Failed to parse the Microsoft Translation API response.');
         }
 
         $translated = $contents[0]['translations'][0]['text'];
