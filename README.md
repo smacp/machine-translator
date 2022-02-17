@@ -10,7 +10,7 @@ Installation
 Add the following to composer.json to install via composer:
 ```composer
 "require": {
-    "smacp/machine-translator": "dev-master"
+    "smacp/machine-translator": "^1"
 },
 "repositories": [
     {
