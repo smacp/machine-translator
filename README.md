@@ -124,7 +124,7 @@ Microsoft Translator API options can be passed to the translate request such as 
 
 This can be done by either setting translate options as defaults for all translate requests:
 
-```yaml
+```php
 $translator->setDefaultTranslateOptions([
     'category' => MicrosoftTranslatorCategory::TECHNOLOGY,
 ]);
@@ -132,7 +132,7 @@ $translator->setDefaultTranslateOptions([
 
 Or by passing an array of options to the MicrosoftTranslator::translate method:
 
-```yaml
+```php
 $translator->translate(
   'Some technology word', 
   'en', 
