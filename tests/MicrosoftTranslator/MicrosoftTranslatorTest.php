@@ -225,7 +225,7 @@ class MicrosoftTranslatorTest extends TestCase
     {
         yield 'en -> es' => ['Hello %name%', 'en', 'es', [], 'Hola %name%'];
         yield 'en -> es HTML' => ['<a href="%url%">Hello %name%</a>', 'en', 'es', [], '<a href="%url%">Hola %name%</a>'];
-        yield 'en -> zh-Hans' => ['Hello %name%', 'en', 'zh-Hans', [], '你好 %name%'];
+        yield 'en -> zh-Hans' => ['Hello %name%', 'en', 'zh-Hans', [], '你好%name%'];
     }
 
     /**

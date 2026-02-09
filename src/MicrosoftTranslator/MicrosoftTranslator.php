@@ -738,7 +738,7 @@ class MicrosoftTranslator implements MachineTranslatorInterface
         $result = [];
 
         foreach (array_values($placeholders) as $key => $value) {
-            $result[$value] =  '%' . ($key+1) . '%';
+            $result[$value] =  '__P' . ($key+1) . '__';
         }
 
         return $result;
